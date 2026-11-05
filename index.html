@@ -10,12 +10,12 @@
 :root{
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Geist",system-ui,sans-serif;
   --txt:#F5F7FF; --txt2:rgba(235,240,255,.72); --txt3:rgba(235,240,255,.6); --txt4:rgba(235,240,255,.5);
-  --good:#5CF0B0; --warn:#FFC24D; --bad:#FF8A7A; --pay:#FFB37A; --blue:#A9BCFF;
+  --good:#8FD4B6; --warn:#DCC08A; --bad:#E5A397; --pay:#E2B894; --blue:#B4BEDB;
   --spring:cubic-bezier(.3,1.4,.5,1);
   --blur:blur(30px) saturate(170%);
 }
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;background:#070A14;color:var(--txt);font:15px/1.5 var(--font);-webkit-font-smoothing:antialiased;
+body{margin:0;min-height:100vh;background:#0D1017;color:var(--txt);font:15px/1.5 var(--font);-webkit-font-smoothing:antialiased;
   padding:28px max(16px,env(safe-area-inset-right)) 64px max(16px,env(safe-area-inset-left))}
 input:focus{outline:none}
 button{font:inherit;color:inherit}
@@ -24,11 +24,11 @@ button{font:inherit;color:inherit}
 
 /* background glows */
 .orbs{position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none}
-.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.55}
-.o1{background:#3B5BFF;width:46vw;height:46vw;top:-12vh;left:-10vw;animation:drift1 22s ease-in-out infinite}
-.o2{background:#12B5A0;width:38vw;height:38vw;top:40vh;left:60vw;animation:drift2 26s ease-in-out infinite}
-.o3{background:#A64DFF;width:34vw;height:34vw;top:55vh;left:5vw;animation:drift3 30s ease-in-out infinite}
-.o4{background:#FF7A3D;width:24vw;height:24vw;top:-6vh;left:64vw;animation:drift2 34s ease-in-out infinite}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.38}
+.o1{background:#46557F;width:46vw;height:46vw;top:-12vh;left:-10vw;animation:drift1 22s ease-in-out infinite}
+.o2{background:#3A6B68;width:38vw;height:38vw;top:40vh;left:60vw;animation:drift2 26s ease-in-out infinite}
+.o3{background:#5E5378;width:34vw;height:34vw;top:55vh;left:5vw;animation:drift3 30s ease-in-out infinite}
+.o4{background:#7A6552;width:24vw;height:24vw;top:-6vh;left:64vw;animation:drift2 34s ease-in-out infinite}
 @keyframes drift1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(8vw,6vh) scale(1.15)}}
 @keyframes drift2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-10vw,-4vh) scale(1.1)}}
 @keyframes drift3{0%,100%{transform:translate(0,0) scale(1.05)}50%{transform:translate(4vw,-8vh) scale(.95)}}
@@ -87,13 +87,13 @@ main{flex:999 1 620px;min-width:0;display:flex;flex-direction:column;gap:16px}
 .panel-head small{font-size:12px;color:var(--txt4)}
 .slider{position:relative;height:28px;display:flex;align-items:center}
 .track{position:absolute;left:0;right:0;height:6px;border-radius:3px;background:rgba(255,255,255,.12);box-shadow:inset 0 1px 2px rgba(0,0,0,.4)}
-.fill{position:absolute;left:0;height:6px;border-radius:3px;background:linear-gradient(90deg,#6F8BFF,#B7C6FF);box-shadow:0 0 12px rgba(143,168,255,.6)}
+.fill{position:absolute;left:0;height:6px;border-radius:3px;background:linear-gradient(90deg,#8590B5,#C3CAE0)}
 input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;width:100%;height:28px;margin:0;position:relative;cursor:pointer}
 input[type=range]::-webkit-slider-runnable-track{height:6px;background:transparent}
 input[type=range]::-moz-range-track{height:6px;background:transparent}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-9px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#DDE4FF 70%);border:1px solid rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(0,0,0,.45),0 0 0 6px rgba(143,168,255,.18);transition:transform .15s}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-9px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#DDE4FF 70%);border:1px solid rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(0,0,0,.45),0 0 0 6px rgba(255,255,255,.08);transition:transform .15s}
 input[type=range]:active::-webkit-slider-thumb{transform:scale(1.15)}
-input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:0;box-shadow:0 4px 14px rgba(0,0,0,.45),0 0 0 6px rgba(143,168,255,.18)}
+input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:0;box-shadow:0 4px 14px rgba(0,0,0,.45),0 0 0 6px rgba(255,255,255,.08)}
 .field{display:flex;align-items:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:14px}
 .field:focus-within{border-color:rgba(169,188,255,.7)}
 .field span{padding-left:14px;color:var(--txt4);font-size:14px}
@@ -102,7 +102,7 @@ input[type=month]{color-scheme:dark;font:500 15px var(--font);color:var(--txt);b
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{font-weight:500;font-size:12.5px;border-radius:999px;padding:5px 11px;cursor:pointer;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:rgba(235,240,255,.75);transition:background .2s}
 .chip[aria-pressed=true]{background:rgba(255,255,255,.24);border-color:rgba(255,255,255,.5);color:#fff}
-.warn{display:flex;gap:8px;align-items:flex-start;background:rgba(255,138,122,.12);border:1px solid rgba(255,138,122,.3);color:#FFB4A8;border-radius:12px;padding:9px 12px;font-size:12.5px;line-height:1.4}
+.warn{display:flex;gap:8px;align-items:flex-start;background:rgba(229,163,151,.12);border:1px solid rgba(229,163,151,.3);color:#E9B4A9;border-radius:12px;padding:9px 12px;font-size:12.5px;line-height:1.4}
 .warn i{width:6px;height:6px;border-radius:50%;background:var(--bad);flex:none;margin-top:6px}
 .warn[hidden]{display:none}
 
@@ -117,7 +117,7 @@ input[type=month]{color-scheme:dark;font:500 15px var(--font);color:var(--txt);b
 .hero-num{font-size:60px;line-height:1;font-weight:700;letter-spacing:-.04em;transition:color .4s}
 .hero-line{font-size:15px;color:rgba(235,240,255,.78);max-width:46ch;text-wrap:pretty}
 .hero .pill{font-size:13px;padding:7px 14px;gap:7px;border:1px solid rgba(255,255,255,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
-.hero .pill i{width:7px;height:7px;box-shadow:0 0 10px currentColor}
+.hero .pill i{width:7px;height:7px}
 .eq{position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
 .eq>div{border-radius:18px;padding:14px 16px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;gap:2px}
 .eq small{font-size:12.5px;color:var(--txt3)}
@@ -149,10 +149,10 @@ input[type=month]{color-scheme:dark;font:500 15px var(--font);color:var(--txt);b
 .gl{position:absolute;left:0;right:0;border-top:1px dashed rgba(255,255,255,.1)}
 .bars{position:absolute;inset:0;display:flex;align-items:flex-end}
 .bcol{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end}
-.b-back{background:linear-gradient(180deg,rgba(255,179,122,.45),rgba(255,179,122,.2));border:1px solid rgba(255,179,122,.5);border-bottom:0;border-radius:8px 8px 0 0;height:0;transition:height .6s cubic-bezier(.3,1.2,.5,1)}
+.b-back{background:linear-gradient(180deg,rgba(226,184,148,.45),rgba(226,184,148,.2));border:1px solid rgba(226,184,148,.5);border-bottom:0;border-radius:8px 8px 0 0;height:0;transition:height .6s cubic-bezier(.3,1.2,.5,1)}
 .b-back[style*="height: 0%"]{border-width:0}
-.b-int{min-height:3px;height:0;background:linear-gradient(180deg,#FFB37A,#FF8A4C);box-shadow:0 0 14px rgba(255,138,76,.45);transition:height .6s cubic-bezier(.3,1.2,.5,1)}
-.line{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;filter:drop-shadow(0 0 6px rgba(143,168,255,.8))}
+.b-int{min-height:3px;height:0;background:linear-gradient(180deg,#E2B894,#C49573);transition:height .6s cubic-bezier(.3,1.2,.5,1)}
+.line{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;filter:drop-shadow(0 0 4px rgba(154,166,204,.3))}
 .xlabels{display:flex}
 .xlabels div{flex:1;min-width:0;text-align:center;font-size:11.5px;color:rgba(235,240,255,.55);white-space:nowrap}
 .yaxis{width:58px;flex:none;position:relative;height:220px;font-size:11.5px;color:var(--txt4)}
@@ -164,7 +164,7 @@ td{padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.07);text-align:righ
 th:nth-child(-n+2),td:nth-child(-n+2){text-align:left}
 td:first-child{color:var(--txt4)}
 th.sv,td.sv{color:var(--blue)}
-tr.last td{background:rgba(255,179,122,.1);font-weight:600}
+tr.last td{background:rgba(226,184,148,.1);font-weight:600}
 tfoot td{font-weight:600;padding:10px 8px;border-bottom:0}
 
 /* assumptions */
@@ -172,8 +172,8 @@ tfoot td{font-weight:600;padding:10px 8px;border-bottom:0}
 .notes h2{font-size:13.5px;color:rgba(235,240,255,.8);white-space:normal}
 .notes-list{display:flex;flex-direction:column;gap:9px;font-size:13px;color:var(--txt2)}
 .note{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;align-items:baseline}
-.tag{justify-self:start;font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;background:rgba(143,168,255,.16);color:#B7C6FF}
-.tag.guess{background:rgba(255,179,122,.16);color:#FFC79E}
+.tag{justify-self:start;font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;background:rgba(154,166,204,.14);color:#C3CAE0}
+.tag.guess{background:rgba(226,184,148,.16);color:#E8C7AA}
 .tag.none{background:rgba(255,255,255,.1);color:rgba(235,240,255,.8)}
 
 @media (max-width:560px){
@@ -260,9 +260,9 @@ tfoot td{font-weight:600;padding:10px 8px;border-bottom:0}
         <div class="chart-head">
           <h2>Payments and savings</h2>
           <div class="legend">
-            <span><i style="width:10px;height:10px;border-radius:3px;background:#FF9A5C"></i>Monthly profit</span>
-            <span><i style="width:10px;height:10px;border-radius:3px;background:rgba(255,179,122,.35);border:1px solid rgba(255,179,122,.6)"></i>Money back</span>
-            <span><i style="width:14px;height:2px;background:#8FA8FF;box-shadow:0 0 6px #8FA8FF"></i>Saved for repayment</span>
+            <span><i style="width:10px;height:10px;border-radius:3px;background:#CFA382"></i>Monthly profit</span>
+            <span><i style="width:10px;height:10px;border-radius:3px;background:rgba(226,184,148,.35);border:1px solid rgba(226,184,148,.6)"></i>Money back</span>
+            <span><i style="width:14px;height:2px;background:#9AA6CC"></i>Saved for repayment</span>
           </div>
         </div>
         <div class="chart">
@@ -270,7 +270,7 @@ tfoot td{font-weight:600;padding:10px 8px;border-bottom:0}
             <div class="plot">
               <div class="gl" style="top:0"></div><div class="gl" style="top:50%"></div>
               <div class="bars" id="bars"></div>
-              <svg class="line" viewBox="0 0 100 100" preserveAspectRatio="none"><polyline id="linePts" fill="none" stroke="#A9BCFF" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"></polyline></svg>
+              <svg class="line" viewBox="0 0 100 100" preserveAspectRatio="none"><polyline id="linePts" fill="none" stroke="#B4BEDB" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"></polyline></svg>
             </div>
             <div class="xlabels" id="xlabels"></div>
           </div>
@@ -350,9 +350,9 @@ var SLIDERS = [
 ];
 
 var verdict = function(good, ok){
-  return !good ? {t:'Loses money', fg:'#FF8A7A', bg:'rgba(255,138,122,.14)', glow:'rgba(255,138,122,.35)'}
-    : ok ? {t:'Good deal', fg:'#5CF0B0', bg:'rgba(92,240,176,.14)', glow:'rgba(92,240,176,.35)'}
-    : {t:'Tight on cash', fg:'#FFC24D', bg:'rgba(255,194,77,.14)', glow:'rgba(255,194,77,.3)'};
+  return !good ? {t:'Loses money', fg:'#E5A397', bg:'rgba(229,163,151,.14)', glow:'rgba(229,163,151,.15)'}
+    : ok ? {t:'Good deal', fg:'#8FD4B6', bg:'rgba(143,212,182,.12)', glow:'rgba(143,212,182,.16)'}
+    : {t:'Tight on cash', fg:'#DCC08A', bg:'rgba(220,192,138,.14)', glow:'rgba(220,192,138,.14)'};
 };
 var inputs = function(d){return {capital:d.capital, rate:d.rate, months:Math.max(1, d.months), start:d.start || '2027-01',
   profit:num(state.profit), costs:num(state.costs), extraPct:d.extra}};
@@ -441,7 +441,6 @@ function render(){
   $('heroQ').textContent = 'Deal ' + LETTERS[a] + ' · what we gain each month';
   var hg = $('heroGain'); hg.style.color = st.fg; tween(hg, r.gain, sg);
   $('heroGlow').style.background = 'radial-gradient(closest-side,' + st.glow + ',transparent)';
-  hg.style.textShadow = '0 0 40px ' + st.glow;
   $('heroLine').textContent = good ? 'The money earns more than we pay for it, so we come out ahead.' : 'We pay the investor more than the money earns, so we lose on this deal.';
   var hp = $('heroPill'); hp.style.background = st.bg; hp.style.color = st.fg; $('heroPillT').textContent = st.t;
   tween($('eqExtra'), r.extra, function(v){return '+' + rs(v)});
@@ -450,9 +449,9 @@ function render(){
   var et = $('eqTotal'); et.style.color = st.fg; tween(et, r.gain * n, sg);
 
   $('saveT').textContent = 'Put aside ' + rs(r.save) + ' a month';
-  var cp = $('cashPill'); cp.style.color = ok ? '#5CF0B0' : '#FF8A7A'; cp.textContent = ok ? 'We can cover it' : 'Not enough';
+  var cp = $('cashPill'); cp.style.color = ok ? '#8FD4B6' : '#E5A397'; cp.textContent = ok ? 'We can cover it' : 'Not enough';
   var cb = $('cashBar'); cb.style.width = Math.max(0, Math.min(100, r.keep / Math.max(r.save, 1) * 100)) + '%';
-  cb.style.background = ok ? 'linear-gradient(90deg,#2FD39A,#7CF7C6)' : 'linear-gradient(90deg,#FF7A5C,#FFB0A0)';
+  cb.style.background = ok ? 'linear-gradient(90deg,#6FB89C,#9CD5BE)' : 'linear-gradient(90deg,#C08677,#E2A496)';
   $('cashText').textContent = 'We repay ' + rs(r.lastPay) + ' at once in ' + mname(last.ym) + '. After paying the investor we keep ' + rs(r.keep) + ' a month.';
 
   tween($('k1'), r.interest, rs); $('k1n').textContent = mname(r.rows[0].ym) + ' to ' + mname(last.ym);
