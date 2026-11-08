@@ -179,6 +179,28 @@ tfoot td{font-weight:600;padding:10px 8px;border-bottom:0}
 .check i{width:9px;height:9px;border-radius:50%;flex:none;margin-top:6px}
 .check b{display:block;font-size:14px;font-weight:600}
 .check span{font-size:12.5px;color:var(--txt3)}
+.why{font-size:12.5px}
+.why summary{cursor:pointer;color:var(--blue);list-style:none;display:inline-flex;align-items:center;gap:5px;font-weight:500;margin-top:4px}
+.why summary::-webkit-details-marker{display:none}
+.why summary::before{content:"?";display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;border:1px solid currentColor;font-size:10px;font-weight:700}
+.why[open] summary{margin-bottom:6px}
+.ex{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.08);color:var(--txt2);font-size:12.5px;line-height:1.45;white-space:normal;text-align:left}
+.ex p{margin:0}.ex b{color:var(--txt);font-weight:600;font-size:inherit;white-space:normal}
+.kpi:has(.why[open]){grid-column:1/-1}
+.summary p{margin:0;font-size:15px;line-height:1.6;color:var(--txt2);max-width:72ch}
+.summary p b{color:var(--txt)}
+.uses{display:flex;flex-direction:column;gap:10px}
+.use{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;align-items:center}
+.use>input{grid-column:1/-1}
+.use label{display:flex;align-items:center;justify-content:space-between;gap:6px;white-space:nowrap;font-size:11.5px;color:var(--txt4)}
+.use label input{width:54px;padding:8px 6px}
+
+.use input{font:500 14px var(--font);color:var(--txt);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:8px 10px;width:100%;min-width:0}
+.use input[type=number]{text-align:right;font-variant-numeric:tabular-nums}
+.big{font-size:22px;font-weight:700;letter-spacing:-.02em}
+.mc-in{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:13.5px;color:var(--txt2)}
+.steps b{color:var(--txt)}
 .tag.none{background:rgba(255,255,255,.1);color:rgba(235,240,255,.8)}
 
 @media (max-width:560px){
@@ -204,6 +226,10 @@ tfoot td{font-weight:600;padding:10px 8px;border-bottom:0}
 
   <div class="cards" id="cards"></div>
 
+  <section class="panel glass summary" aria-live="polite" style="gap:10px">
+    <h2 id="sumT">In plain words</h2>
+    <p id="sum"></p>
+  </section>
   <div class="cols">
     <aside>
       <div class="panel glass strong">
@@ -229,14 +255,40 @@ tfoot td{font-weight:600;padding:10px 8px;border-bottom:0}
           <div class="warn" id="costWarn"><i></i><span>Not on the dashboard yet, so real profit is lower than shown.</span></div>
         </div>
         <div class="row">
+          <label for="tied">Money tied up in the business</label>
+          <div class="field"><span>Rs</span><input id="tied" type="text" inputmode="numeric" value="4,000,000"></div>
+          <div class="hint">Stock in the warehouse + stock on the way + COD money not paid yet. Estimate for now.</div>
+          <details class="why"><summary>What does this mean?</summary><div class="ex" data-k="tied"></div></details>
+        </div>
+        <div class="row">
+          <div class="row-head"><span class="lbl">Our earning rate</span><span class="row-val tnum" id="earnVal"></span></div>
+          <div class="hint" id="earnHint"></div>
+          <details class="why"><summary>What does this mean?</summary><div class="ex" data-k="earn"></div></details>
+        </div>
+        <div class="row">
           <div class="row-head"><label for="share">Safe share of profit for all investors</label><span class="row-val tnum" id="shareVal"></span></div>
           <div class="slider"><div class="track"></div><div class="fill" id="shareFill"></div><input type="range" id="share" min="10" max="100" step="5" value="50"></div>
           <div class="hint">The most of our monthly profit we allow investor payments to take.</div>
+          <details class="why"><summary>What does this mean?</summary><div class="ex" data-k="share"></div></details>
+        </div>
+      </div>
+
+      <div class="panel glass" style="gap:14px">
+        <div class="panel-head"><div class="panel-title">How we will use the money</div><small>Same for all deals</small></div>
+        <div class="uses">
+          <div id="uses"></div>
+        </div>
+        <div class="warn" id="useWarn" hidden><i></i><span id="useWarnT"></span></div>
+        <div class="row">
+          <div class="row-head"><span class="lbl">New money should earn</span><span class="row-val tnum" id="newRateVal"></span></div>
+          <div class="hint" id="newRateHint"></div>
+          <details class="why"><summary>What does this mean?</summary><div class="ex" data-k="blend"></div></details>
         </div>
       </div>
     </aside>
 
     <main>
+
       <section class="hero" aria-live="polite">
         <div class="hero-glow" id="heroGlow"></div>
         <div class="hero-top">
@@ -244,39 +296,41 @@ tfoot td{font-weight:600;padding:10px 8px;border-bottom:0}
             <div class="hero-q" id="heroQ">Deal A · what we gain each month</div>
             <div class="hero-num tnum" id="heroGain"></div>
             <div class="hero-line" id="heroLine"></div>
+            <details class="why"><summary>What does this mean?</summary><div class="ex" data-k="gain"></div></details>
           </div>
           <span class="pill" id="heroPill"><i></i><em style="font-style:normal" id="heroPillT"></em></span>
         </div>
         <div class="eq">
-          <div><small>The money earns us</small><b class="tnum" id="eqExtra"></b></div>
-          <div><small>We pay the investor</small><b class="tnum" id="eqPay" style="color:var(--pay)"></b></div>
-          <div><small id="eqTotalQ">Over 6 months</small><b class="tnum" id="eqTotal"></b></div>
+          <div><small>The money earns us</small><b class="tnum" id="eqExtra"></b><details class="why"><summary>What does this mean?</summary><div class="ex" data-k="extra"></div></details></div>
+          <div><small>We pay the investor</small><b class="tnum" id="eqPay" style="color:var(--pay)"></b><details class="why"><summary>What does this mean?</summary><div class="ex" data-k="interest"></div></details></div>
+          <div><small id="eqTotalQ">Over 6 months</small><b class="tnum" id="eqTotal"></b><details class="why"><summary>What does this mean?</summary><div class="ex" data-k="total"></div></details></div>
         </div>
         <div class="cash">
           <div class="cash-head"><b id="saveT"></b><span id="cashPill"></span></div>
           <div class="bar"><div id="cashBar"></div></div>
           <p id="cashText"></p>
+          <details class="why"><summary>What does this mean?</summary><div class="ex" data-k="save"></div></details>
         </div>
       </section>
 
       <div class="kpis">
-        <div class="kpi"><small>Investor gets monthly</small><b class="tnum" id="k1" style="color:var(--pay)"></b><span id="k1n"></span></div>
-        <div class="kpi"><small>Investor gets in total</small><b class="tnum" id="k2" style="color:var(--pay)"></b><span id="k2n"></span></div>
-        <div class="kpi"><small>Money goes back</small><b id="k3"></b><span id="k3n"></span></div>
-        <div class="kpi"><small>We keep monthly</small><b class="tnum" id="k4" style="color:var(--blue)"></b><span>After the investor is paid</span></div>
+        <div class="kpi"><small>Investor gets monthly</small><b class="tnum" id="k1" style="color:var(--pay)"></b><span id="k1n"></span><details class="why"><summary>What does this mean?</summary><div class="ex" data-k="interest"></div></details></div>
+        <div class="kpi"><small>Investor gets in total</small><b class="tnum" id="k2" style="color:var(--pay)"></b><span id="k2n"></span><details class="why"><summary>What does this mean?</summary><div class="ex" data-k="k2"></div></details></div>
+        <div class="kpi"><small>Money goes back</small><b id="k3"></b><span id="k3n"></span><details class="why"><summary>What does this mean?</summary><div class="ex" data-k="k3"></div></details></div>
+        <div class="kpi"><small>We keep monthly</small><b class="tnum" id="k4" style="color:var(--blue)"></b><span>After the investor is paid</span><details class="why"><summary>What does this mean?</summary><div class="ex" data-k="k4"></div></details></div>
       </div>
 
       <section class="chart-panel glass" aria-live="polite">
         <div class="chart-head"><h2>How much can we raise?</h2><span class="hint" id="potT"></span></div>
         <div class="kpis">
-          <div class="kpi"><small id="maxRetQ">Most we can raise at 3%</small><b class="tnum" id="maxRet" style="color:var(--blue)"></b><span>Monthly returns stay inside the safe share</span></div>
-          <div class="kpi"><small>Most we can raise and still repay</small><b class="tnum" id="maxRep" style="color:var(--blue)"></b><span id="maxRepN"></span></div>
-          <div class="kpi"><small>Highest fair rate</small><b class="tnum" id="fairRate" style="color:var(--blue)"></b><span id="fairRateN"></span></div>
+          <div class="kpi"><small id="maxRetQ">Most we can raise at 3%</small><b class="tnum" id="maxRet" style="color:var(--blue)"></b><span>Monthly payments stay inside the safe share</span><details class="why"><summary>What does this mean?</summary><div class="ex" data-k="maxRet"></div></details></div>
+          <div class="kpi"><small>Most we can raise and still repay</small><b class="tnum" id="maxRep" style="color:var(--blue)"></b><span id="maxRepN"></span><details class="why"><summary>What does this mean?</summary><div class="ex" data-k="maxRep"></div></details></div>
+          <div class="kpi"><small>Highest fair rate</small><b class="tnum" id="fairRate" style="color:var(--blue)"></b><span id="fairRateN"></span><details class="why"><summary>What does this mean?</summary><div class="ex" data-k="fair"></div></details></div>
         </div>
         <div class="checks">
-          <div class="check"><i id="c1i"></i><div><b id="c1"></b><span id="c1n"></span></div></div>
-          <div class="check"><i id="c2i"></i><div><b id="c2"></b><span id="c2n"></span></div></div>
-          <div class="check"><i id="c3i"></i><div><b id="c3"></b><span id="c3n"></span></div></div>
+          <div class="check"><i id="c1i"></i><div><b id="c1"></b><span id="c1n"></span><details class="why"><summary>What does this mean?</summary><div class="ex" data-k="c1"></div></details></div></div>
+          <div class="check"><i id="c2i"></i><div><b id="c2"></b><span id="c2n"></span><details class="why"><summary>What does this mean?</summary><div class="ex" data-k="c2"></div></details></div></div>
+          <div class="check"><i id="c3i"></i><div><b id="c3"></b><span id="c3n"></span><details class="why"><summary>What does this mean?</summary><div class="ex" data-k="c3"></div></details></div></div>
         </div>
       </section>
 
@@ -307,13 +361,25 @@ tfoot td{font-weight:600;padding:10px 8px;border-bottom:0}
         </table></div>
       </section>
 
+      <section class="chart-panel glass" aria-live="polite">
+        <div class="chart-head"><h2>Monthly check</h2><span class="hint">Do this once a month, after the money is in use</span></div>
+        <div class="mc-in">
+          <div class="row"><label for="mcMonth">This month's profit</label><div class="field"><span>Rs</span><input id="mcMonth" type="text" inputmode="numeric" value="1,020,000"></div><div class="hint">Example. Type your real month.</div></div>
+          <div class="row"><label for="mcNormal">Normal profit</label><div class="field"><span>Rs</span><input id="mcNormal" type="text" inputmode="numeric" value="900,692"></div><div class="hint">Average of the last 3 months.</div></div>
+          <div class="row"><label for="mcUsed">Investor money in use</label><div class="field"><span>Rs</span><input id="mcUsed" type="text" inputmode="numeric" value="1,000,000"></div><div class="hint">Only money already spent on stock or ads.</div></div>
+        </div>
+        <ol class="steps" id="mcSteps"></ol>
+        <div class="check"><i id="mcI"></i><div><b id="mcT"></b><span id="mcN"></span></div></div>
+      </section>
+
       <section class="notes">
         <h2>What is real and what is a guess</h2>
         <div class="notes-list">
           <div class="note"><span class="tag">Data</span><span>Net profit Jul Rs 930,809, Aug Rs 879,829, Sep Rs 891,440, from the live dashboard.</span></div>
           <div class="note"><span class="tag">Your rule</span><span>3% of the money each month, first payment one month after receiving it, money returned with the last payment.</span></div>
           <div class="note"><span class="tag guess">Guess</span><span>Office costs and salaries are Rs 0 until Anees's expense sheet is added.</span></div>
-          <div class="note"><span class="tag guess">Guess</span><span>Extra profit from the investor's money (10% a month) is a placeholder. Change it to what you really expect.</span></div>
+          <div class="note"><span class="tag guess">Guess</span><span>Money tied up (Rs 4,000,000) is about 2 months of spending. Your real stock and COD figures will replace it.</span></div>
+          <div class="note"><span class="tag guess">Guess</span><span>The safety % for each use (85%, 65%, 30%) are starting points. The monthly check corrects them with real results.</span></div>
           <div class="note"><span class="tag">Your rule</span><span>Investor payments may take at most the safe share of monthly profit (50% to start). The 3% is always paid on the original amount.</span></div>
           <div class="note"><span class="tag none">Not covered</span><span>Tax on payments, and what happens if a month makes a loss. Put these in the written agreement.</span></div>
         </div>
@@ -349,6 +415,17 @@ function plan(i, r, sharePct){
     giveAwayPct: i.extraPct > 0 ? i.rate / i.extraPct * 100 : Infinity,
     oblig: r.interest + r.save, obligPct: monthly > 0 ? (r.interest + r.save) / monthly * 100 : Infinity};
 }
+function earnRate(profit, costs, tied){ return tied > 0 ? (profit - costs) / tied * 100 : 0; }
+function blend(uses){ // weighted safety %, weights = % of money
+  var w = 0, t = 0; uses.forEach(function(u){ w += Math.max(0, u.pct); t += Math.max(0, u.pct) * u.safe; });
+  return {safe: w > 0 ? t / w : 0, total: w};
+}
+function monthly(m){ // m: month, normal, used, normalRate, oldSafe, rate
+  var extra = m.month - m.normal, earned = m.used > 0 ? extra / m.used * 100 : 0;
+  var real = m.normalRate > 0 ? earned / m.normalRate * 100 : 0;
+  var nu = Math.max(0, Math.min(100, (m.oldSafe + real) / 2));
+  return {extra:extra, earned:earned, real:real, newSafe:nu, belowCost: earned < m.rate};
+}
 function addMonths(ym, k){ // ym = "YYYY-MM"
   var p = String(ym || '2027-01').split('-'), y = +p[0], m = +p[1] - 1 + k;
   return (y + Math.floor(m / 12)) + '-' + String(m % 12 + 1).padStart(2, '0');
@@ -367,10 +444,14 @@ var mname = function(ym){var p = ym.split('-'); return MON[+p[1]-1] + ' ' + p[0]
 var PROFIT = {'Jul':930809,'Aug':879829,'Sep':891440,'Jul–Sep average':900692};
 var LETTERS = ['A','B','C'];
 var COUNT = 3;
+var GOOD0 = '#8FD4B6', BAD0 = '#E5A397';
+var esc = function(t){ return String(t).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
 var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 var state = {
-  active: 0, profit: '900,692', costs: '0', share: 50,
+  active: 0, profit: '900,692', costs: '0', share: 50, tied: '4,000,000',
+  uses: [{name:'More stock of best sellers', pct:50, safe:85}, {name:'More ads for the same products', pct:30, safe:65}, {name:'A new product', pct:20, safe:30}],
+  mc: {mcMonth:'1,020,000', mcNormal:'900,692', mcUsed:'1,000,000'},
   sc: [
     {capital:1000000, rate:3, months:6, start:'2027-01', extra:10},
     {capital:2000000, rate:3, months:6, start:'2027-01', extra:5},
@@ -381,8 +462,7 @@ var state = {
 var SLIDERS = [
   {k:'capital', label:"Investor's money", min:100000, max:10000000, step:50000, text:function(d){return rs(d.capital)}},
   {k:'rate', label:'We pay them, per month', min:0.5, max:10, step:0.25, text:function(d){return d.rate + '%'}, hint:function(d,r){return rs(r.interest) + ' a month'}},
-  {k:'months', label:'Number of payments', min:1, max:36, step:1, text:function(d){return d.months + (d.months === 1 ? ' month' : ' months')}, hint:function(d,r){return 'Money goes back in ' + mname(r.rows[r.rows.length-1].ym)}},
-  {k:'extra', label:'The money earns us, per month', min:0, max:30, step:0.5, text:function(d){return d.extra + '%'}, hint:function(d){return 'Must be over ' + d.rate + '% to be worth it'}}
+  {k:'months', label:'Number of payments', min:1, max:36, step:1, text:function(d){return d.months + (d.months === 1 ? ' month' : ' months')}, hint:function(d,r){return 'Money goes back in ' + mname(r.rows[r.rows.length-1].ym)}}
 ];
 
 var verdict = function(good, ok, fair){
@@ -392,7 +472,9 @@ var verdict = function(good, ok, fair){
     : {t:'Tight on cash', fg:'#DCC08A', bg:'rgba(220,192,138,.14)', glow:'rgba(220,192,138,.14)'};
 };
 var inputs = function(d){return {capital:d.capital, rate:d.rate, months:Math.max(1, d.months), start:d.start || '2027-01',
-  profit:num(state.profit), costs:num(state.costs), extraPct:d.extra}};
+  profit:num(state.profit), costs:num(state.costs), extraPct:newRate()}};
+var baseRate = function(){ return earnRate(num(state.profit), num(state.costs), num(state.tied)); };
+var newRate = function(){ return baseRate() * blend(state.uses).safe / 100; };
 
 /* animated number: counts from its current value to the target */
 function tween(el, to, fmt){
@@ -448,6 +530,25 @@ $('start').addEventListener('input', function(){ state.sc[state.active].start = 
 });
 
 $('share').addEventListener('input', function(){ state.share = +this.value; render(); });
+$('tied').addEventListener('input', function(){ state.tied = this.value; render(); });
+$('tied').addEventListener('blur', function(){ this.value = state.tied = num(this.value).toLocaleString('en-US'); render(); });
+['mcMonth','mcNormal','mcUsed'].forEach(function(id){
+  $(id).addEventListener('input', function(){ state.mc[id] = this.value; render(); });
+  $(id).addEventListener('blur', function(){ this.value = state.mc[id] = num(this.value).toLocaleString('en-US'); render(); });
+});
+var usesEl = $('uses');
+state.uses.forEach(function(u, k){
+  var row = document.createElement('div'); row.className = 'use'; row.style.marginBottom = '8px';
+  row.innerHTML = '<input type="text" id="useN' + k + '" aria-label="Use ' + (k + 1) + ' name">' +
+    '<label>% of money<input type="number" id="useP' + k + '" min="0" max="100" step="5"></label>' +
+    '<label>Safety %<input type="number" id="useS' + k + '" min="0" max="100" step="5"></label>';
+  usesEl.appendChild(row);
+  var n = row.children[0], pc = $('useP' + k), sf = $('useS' + k);
+  n.value = u.name; pc.value = u.pct; sf.value = u.safe;
+  n.addEventListener('input', function(){ u.name = n.value; render(); });
+  pc.addEventListener('input', function(){ u.pct = num(pc.value); render(); });
+  sf.addEventListener('input', function(){ u.safe = Math.min(100, num(sf.value)); render(); });
+});
 function pick(k){ state.active = Math.min(k, COUNT - 1); $('start').value = state.sc[state.active].start; render(); }
 
 var barsBuilt = 0;
@@ -507,7 +608,7 @@ function render(){
   $('maxRep').textContent = rs(pl.maxRepay);
   $('maxRepN').textContent = 'Also saving to repay it in ' + n + ' months';
   $('fairRate').textContent = (Math.round(pl.fairRate * 100) / 100) + '% a month';
-  $('fairRateN').textContent = state.share + '% of the ' + i.extraPct + '% the money earns';
+  $('fairRateN').textContent = state.share + '% of the ' + (Math.round(i.extraPct * 10) / 10) + '% the money earns';
   var chk = function(id, ok, t, sub){ $(id + 'i').style.background = ok ? GOOD : BAD; $(id).textContent = t; $(id).style.color = ok ? GOOD : BAD; $(id + 'n').textContent = sub; };
   chk('c1', pl.usedPct <= state.share, 'Payments use ' + pl.usedPct.toFixed(1) + '% of profit (limit ' + state.share + '%)',
     rs(r.interest) + ' a month out of ' + rs(r.base) + ' profit.');
@@ -515,6 +616,128 @@ function render(){
     'The investor gets ' + (isFinite(pl.giveAwayPct) ? pl.giveAwayPct.toFixed(0) + '%' : 'all') + ' of what their money earns us.');
   chk('c3', pl.obligPct <= 100, 'Paying and saving to repay takes ' + (isFinite(pl.obligPct) ? pl.obligPct.toFixed(0) : '∞') + '% of monthly profit',
     rs(r.interest) + ' to the investor + ' + rs(r.save) + ' saved each month, so ' + rs(r.lastPay) + ' is ready in ' + mname(last.ym) + '.');
+
+  /* earning rate, money split */
+  var er = baseRate(), bl = blend(state.uses), nr = er * bl.safe / 100, tied = num(state.tied);
+  var p1 = function(v){ return isFinite(v) ? (Math.round(v * 10) / 10) + '%' : '–'; };
+  var SPEND = 1987013; // Jul-Sep average monthly spending: stock, ads, courier, tax, returns, Shopify
+  $('earnVal').textContent = p1(er) + ' a month';
+  $('earnHint').textContent = rs(r.base) + ' profit ÷ ' + rs(tied) + ' tied up';
+  $('newRateVal').textContent = p1(nr) + ' a month';
+  $('newRateHint').textContent = 'Our ' + p1(er) + ' × safety ' + p1(bl.safe) + ' = ' + p1(nr);
+  $('useWarn').hidden = Math.round(bl.total) === 100;
+  $('useWarnT').textContent = 'The % of money adds up to ' + Math.round(bl.total) + '%. Make it 100%.';
+
+  /* monthly check */
+  var mcIn = {month:num(state.mc.mcMonth), normal:num(state.mc.mcNormal), used:num(state.mc.mcUsed)};
+  var mc = monthly({month:mcIn.month, normal:mcIn.normal, used:mcIn.used, normalRate:er, oldSafe:bl.safe, rate:i.rate});
+  $('mcSteps').innerHTML = [
+    '<b>Normal profit: ' + rs(mcIn.normal) + '.</b> This is what a usual month looks like.',
+    '<b>Extra profit: ' + rs(mcIn.month) + ' − ' + rs(mcIn.normal) + ' = ' + rs(mc.extra) + '.</b> This is the profit the new money added.',
+    '<b>New money earned: ' + rs(mc.extra) + ' ÷ ' + rs(mcIn.used) + ' = ' + p1(mc.earned) + '.</b> Profit for every Rs 100 of investor money this month.',
+    '<b>Real safety: ' + p1(mc.earned) + ' ÷ our normal ' + p1(er) + ' = ' + p1(mc.real) + '.</b> The new money earned ' + p1(mc.real) + ' as well as our current money.',
+    '<b>New safety %: halfway between ' + p1(bl.safe) + ' and ' + p1(mc.real) + ' = ' + p1(mc.newSafe) + '.</b> Halfway, so one odd month does not swing it too much.'
+  ].map(function(t){ return '<li>' + t + '</li>'; }).join('');
+  $('mcI').style.background = mc.belowCost ? BAD0 : GOOD0;
+  $('mcT').style.color = mc.belowCost ? BAD0 : GOOD0;
+  $('mcT').textContent = mc.belowCost ? 'The new money earned less than the ' + i.rate + '% we pay.' : 'The new money earned more than the ' + i.rate + '% we pay.';
+  $('mcN').textContent = (mc.belowCost ? 'If this happens 2 months in a row, stop raising money. ' : 'Keep going. ') +
+    'Next time, use about ' + p1(mc.newSafe) + ' as the safety % ' + (mc.newSafe < bl.safe ? '(lower than now).' : mc.newSafe > bl.safe ? '(higher than now).' : '(same as now).');
+
+  /* plain summary */
+  var pl0 = plan(i, r, state.share);
+  $('sumT').textContent = 'Deal ' + LETTERS[a] + ' in plain words';
+  $('sum').innerHTML = [
+    'An investor gives us <b>' + rs(i.capital) + '</b>. We return it in <b>' + mname(last.ym) + '</b>.',
+    'Every month we pay them <b>' + rs(r.interest) + '</b> (' + i.rate + '%). That is ' + p1(pl0.usedPct) + ' of our profit, ' + (pl0.usedPct <= state.share ? 'which is safe.' : 'which is too much.'),
+    'We expect the money to earn us about <b>' + rs(r.extra) + '</b> a month. So we ' + (good ? 'keep <b>' + rs(r.gain) + '</b> extra each month.' : '<b>lose ' + rs(-r.gain) + '</b> each month.'),
+    'To return their money, we save <b>' + rs(r.save) + '</b> each month. ' + (ok ? 'We can afford this.' : 'We cannot afford this yet.'),
+    'At ' + i.rate + '%, the most we should raise is about <b>' + short(pl0.maxRepay) + '</b>.',
+    'The biggest guess is money tied up (' + short(tied) + '). Real stock and COD figures will fix it.'
+  ].join(' ');
+
+  /* explanations: what it is / how / what it means now / what to do */
+  var pl1 = pl0, fair = Math.round(pl1.fairRate * 100) / 100, give = nr > 0 ? i.rate / nr * 100 : Infinity;
+  var perM = 1e6 * (i.rate / 100 + 1 / n);
+  var EX = {
+    tied: ['All the money stuck in the business right now.',
+      'Stock in the warehouse + stock on the way + COD money FulfillKaro has not paid yet.',
+      'Now set to ' + rs(tied) + '. That is about ' + (tied / SPEND).toFixed(1) + ' months of our spending (' + rs(SPEND) + ' a month).',
+      'This is an estimate. Your real stock and COD figures will replace it.'],
+    earn: ['How much profit each Rs 100 in the business makes in one month.',
+      rs(r.base) + ' profit ÷ ' + rs(tied) + ' tied up = ' + p1(er) + '.',
+      er > i.rate ? 'Good. It is far above the ' + i.rate + '% we pay investors.' : 'Careful. It is below the ' + i.rate + '% we pay, so investor money would cost more than it earns.',
+      'If this falls below the % we pay, stop raising money.'],
+    share: ['The biggest part of our monthly profit we allow investor payments to take.',
+      'You choose it. 50% means at most half our profit goes to investors.',
+      state.share + '% of ' + rs(r.base) + ' = ' + rs(pl1.pot) + ' a month for all investors together.',
+      'Lower is safer. 30% to 50% leaves room for a bad month.'],
+    blend: ['How well the new money should earn, compared with our current money.',
+      'Each use has its own safety %. We mix them by how much money goes to each: ' + state.uses.map(function(u){ return esc(u.name) + ' ' + u.pct + '% × ' + u.safe + '%'; }).join(', ') + ' = ' + p1(bl.safe) + '.',
+      'So new money should earn ' + p1(er) + ' × ' + p1(bl.safe) + ' = ' + p1(nr) + ' a month.',
+      'Proven products deserve a high %. A new product deserves a low %. Correct them with the monthly check.'],
+    gain: ['The extra money we keep each month because of this deal.',
+      'The money earns us ' + rs(r.extra) + '. We pay the investor ' + rs(r.interest) + '. ' + rs(r.extra) + ' − ' + rs(r.interest) + ' = ' + sg(r.gain) + '.',
+      good ? 'We come out ahead. The money earns more than it costs.' : 'We lose money. The investor costs more than the money earns.',
+      good ? 'Fine as it is. Check again when our profit changes.' : 'Lower the rate to ' + fair + '% or less, or raise less money.'],
+    extra: ['The extra profit we expect the investor\'s money to make each month.',
+      rs(i.capital) + ' × ' + p1(nr) + ' = ' + rs(r.extra) + '. ' + p1(nr) + ' is our earning rate ' + p1(er) + ' × safety ' + p1(bl.safe) + '.',
+      r.interest > 0 ? 'That is ' + (r.extra / r.interest).toFixed(1) + ' times what we pay the investor.' : 'We pay the investor nothing.',
+      'This is an estimate. Check it with the monthly check after the first month.'],
+    interest: ['What we pay the investor every month until we return their money.',
+      i.rate + '% of ' + rs(i.capital) + ' = ' + rs(r.interest) + '.',
+      'That is ' + p1(pl1.usedPct) + ' of our monthly profit.',
+      'This amount is fixed. It does not go down in a bad month, so we must always be able to pay it.'],
+    total: ['What we gain over the whole ' + n + ' months.',
+      sg(r.gain) + ' a month × ' + n + ' months = ' + sg(r.gain * n) + '.',
+      good ? 'This is our reward for taking the deal.' : 'This is what the deal would cost us.',
+      good ? 'Compare deals by this number.' : 'Change the deal until this turns positive.'],
+    save: ['Money we set aside each month, so we can return the investor\'s money at the end.',
+      rs(i.capital) + ' ÷ ' + n + ' months = ' + rs(r.save) + ' a month.',
+      ok ? 'We keep ' + rs(r.keep) + ' a month, so we can afford it.' : 'We keep only ' + rs(r.keep) + ' a month. That is not enough.',
+      ok ? 'Keep this money separate, so it is ready on the day.' : 'Raise less money, or choose more months, so the monthly amount is smaller.'],
+    k2: ['Everything the investor receives from this deal.',
+      rs(r.interest) + ' × ' + n + ' months = ' + rs(r.totalInterest) + ' profit, plus their ' + rs(i.capital) + ' back = ' + rs(r.totalPaid) + '.',
+      'The investor earns ' + p1(i.capital ? r.totalInterest / i.capital * 100 : 0) + ' on their money in ' + n + ' months.',
+      'This is the full promise. Tell the investor this number.'],
+    k3: ['The month we return the investor\'s money.',
+      'Money arrives ' + mname(i.start) + '. First payment one month later. Payment ' + n + ' includes the full ' + rs(i.capital) + '.',
+      'In ' + mname(last.ym) + ' we pay ' + rs(r.lastPay) + ' at once. It is the biggest payment.',
+      'Have ' + rs(r.lastPay) + ' ready by then. The monthly saving makes this possible.'],
+    k4: ['Our profit after the investor is paid.',
+      rs(r.base) + ' our profit + ' + rs(r.extra) + ' from the money − ' + rs(r.interest) + ' to the investor = ' + rs(r.keep) + '.',
+      'Without the deal we keep ' + rs(r.base) + '. With it we keep ' + (good ? rs(r.gain) + ' more.' : rs(-r.gain) + ' less.'),
+      'Part of this goes into the monthly saving (' + rs(r.save) + ').'],
+    maxRet: ['The most money we can raise at this rate, counting only the monthly payments.',
+      'Investors may take up to ' + state.share + '% of our profit: ' + rs(pl1.pot) + ' a month. ' + rs(pl1.pot) + ' ÷ ' + i.rate + '% = ' + rs(pl1.maxReturns) + '.',
+      'Raising ' + rs(i.capital) + ' uses ' + p1(isFinite(pl1.maxReturns) && pl1.maxReturns > 0 ? i.capital / pl1.maxReturns * 100 : 0) + ' of this limit.',
+      'This limit ignores returning the money. Use the next number to decide.'],
+    maxRep: ['The most we can raise if we also save each month to return the money.',
+      'Each Rs 1M costs us ' + rs(perM) + ' a month: ' + i.rate + '% to the investor + Rs 1M ÷ ' + n + ' saved. ' + rs(pl1.pot) + ' ÷ ' + rs(perM) + ' × Rs 1M = ' + rs(pl1.maxRepay) + '.',
+      i.capital <= pl1.maxRepay ? rs(i.capital) + ' is within this limit.' : rs(i.capital) + ' is above this limit.',
+      'This is the safer limit. Use it when you decide how much to raise.'],
+    fair: ['The highest monthly % we can pay and still keep most of what the money earns.',
+      'The money earns ' + p1(nr) + ' a month. We give at most ' + state.share + '% of that: ' + p1(nr) + ' × ' + state.share + '% = ' + fair + '%.',
+      i.rate <= fair ? 'We pay ' + i.rate + '%, which is within the limit.' : 'We pay ' + i.rate + '%, which is above the limit.',
+      i.rate <= fair ? 'Keep the rate at or below ' + fair + '%.' : 'Lower the rate to ' + fair + '% or less.'],
+    c1: ['Checks that the monthly payment is a small enough part of our profit.',
+      rs(r.interest) + ' ÷ ' + rs(r.base) + ' = ' + p1(pl1.usedPct) + '. Our limit is ' + state.share + '%.',
+      pl1.usedPct <= state.share ? 'Safe. Even in a weaker month we can pay.' : 'Too high. A weaker month could leave us short.',
+      pl1.usedPct <= state.share ? 'Nothing to do.' : 'Raise less money or lower the rate.'],
+    c2: ['Checks that the investor does not take too much of what their money earns.',
+      'We pay ' + i.rate + '%. The money earns ' + p1(nr) + '. ' + i.rate + ' ÷ ' + p1(nr).replace('%', '') + ' = ' + p1(give) + ' goes to the investor.',
+      give <= state.share ? 'Fair. We keep ' + p1(100 - give) + ' of what the money earns.' : 'Too much. The investor takes ' + p1(give) + ', above our ' + state.share + '% limit.',
+      give <= state.share ? 'Nothing to do.' : 'Lower the rate to ' + fair + '% or less.'],
+    c3: ['Checks that we can pay the investor and save for the return at the same time.',
+      rs(r.interest) + ' + ' + rs(r.save) + ' = ' + rs(pl1.oblig) + ' a month. That is ' + p1(pl1.obligPct) + ' of our profit with the new money.',
+      pl1.obligPct <= 100 ? 'We can afford both.' : 'We cannot afford both.',
+      pl1.obligPct <= 100 ? 'Keep saving every month.' : 'Raise less money, or choose more months.']
+  };
+  var LBL = ['What it is', 'How it is worked out', 'What it means now', 'What to do'];
+  Array.prototype.forEach.call(document.querySelectorAll('.ex[data-k]'), function(el){
+    var e = EX[el.dataset.k]; if (!e) return;
+    el.innerHTML = e.map(function(t, k){ return '<p><b>' + LBL[k] + ':</b> ' + t + '</p>'; }).join('');
+  });
 
   /* chart */
   var max = Math.max(r.lastPay, 1), step = Math.ceil(n / 12), gap = n > 24 ? '3px' : n > 12 ? '5px' : '10px';
