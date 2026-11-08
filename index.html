@@ -174,6 +174,11 @@ tfoot td{font-weight:600;padding:10px 8px;border-bottom:0}
 .note{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;align-items:baseline}
 .tag{justify-self:start;font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;background:rgba(154,166,204,.14);color:#C3CAE0}
 .tag.guess{background:rgba(226,184,148,.16);color:#E8C7AA}
+.checks{display:flex;flex-direction:column;gap:10px}
+.check{display:flex;gap:12px;align-items:flex-start;border-radius:16px;padding:12px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
+.check i{width:9px;height:9px;border-radius:50%;flex:none;margin-top:6px}
+.check b{display:block;font-size:14px;font-weight:600}
+.check span{font-size:12.5px;color:var(--txt3)}
 .tag.none{background:rgba(255,255,255,.1);color:rgba(235,240,255,.8)}
 
 @media (max-width:560px){
@@ -223,6 +228,11 @@ tfoot td{font-weight:600;padding:10px 8px;border-bottom:0}
           <div class="field"><span>Rs</span><input id="costs" type="text" inputmode="numeric" value="0"></div>
           <div class="warn" id="costWarn"><i></i><span>Not on the dashboard yet, so real profit is lower than shown.</span></div>
         </div>
+        <div class="row">
+          <div class="row-head"><label for="share">Safe share of profit for all investors</label><span class="row-val tnum" id="shareVal"></span></div>
+          <div class="slider"><div class="track"></div><div class="fill" id="shareFill"></div><input type="range" id="share" min="10" max="100" step="5" value="50"></div>
+          <div class="hint">The most of our monthly profit we allow investor payments to take.</div>
+        </div>
       </div>
     </aside>
 
@@ -255,6 +265,20 @@ tfoot td{font-weight:600;padding:10px 8px;border-bottom:0}
         <div class="kpi"><small>Money goes back</small><b id="k3"></b><span id="k3n"></span></div>
         <div class="kpi"><small>We keep monthly</small><b class="tnum" id="k4" style="color:var(--blue)"></b><span>After the investor is paid</span></div>
       </div>
+
+      <section class="chart-panel glass" aria-live="polite">
+        <div class="chart-head"><h2>How much can we raise?</h2><span class="hint" id="potT"></span></div>
+        <div class="kpis">
+          <div class="kpi"><small id="maxRetQ">Most we can raise at 3%</small><b class="tnum" id="maxRet" style="color:var(--blue)"></b><span>Monthly returns stay inside the safe share</span></div>
+          <div class="kpi"><small>Most we can raise and still repay</small><b class="tnum" id="maxRep" style="color:var(--blue)"></b><span id="maxRepN"></span></div>
+          <div class="kpi"><small>Highest fair rate</small><b class="tnum" id="fairRate" style="color:var(--blue)"></b><span id="fairRateN"></span></div>
+        </div>
+        <div class="checks">
+          <div class="check"><i id="c1i"></i><div><b id="c1"></b><span id="c1n"></span></div></div>
+          <div class="check"><i id="c2i"></i><div><b id="c2"></b><span id="c2n"></span></div></div>
+          <div class="check"><i id="c3i"></i><div><b id="c3"></b><span id="c3n"></span></div></div>
+        </div>
+      </section>
 
       <section class="chart-panel glass">
         <div class="chart-head">
@@ -290,6 +314,7 @@ tfoot td{font-weight:600;padding:10px 8px;border-bottom:0}
           <div class="note"><span class="tag">Your rule</span><span>3% of the money each month, first payment one month after receiving it, money returned with the last payment.</span></div>
           <div class="note"><span class="tag guess">Guess</span><span>Office costs and salaries are Rs 0 until Anees's expense sheet is added.</span></div>
           <div class="note"><span class="tag guess">Guess</span><span>Extra profit from the investor's money (10% a month) is a placeholder. Change it to what you really expect.</span></div>
+          <div class="note"><span class="tag">Your rule</span><span>Investor payments may take at most the safe share of monthly profit (50% to start). The 3% is always paid on the original amount.</span></div>
           <div class="note"><span class="tag none">Not covered</span><span>Tax on payments, and what happens if a month makes a loss. Put these in the written agreement.</span></div>
         </div>
       </section>
@@ -313,6 +338,17 @@ function calc(i){
     base:base, extra:extra, keep:base + extra - interest, gain:extra - interest,
     lastPay:interest + i.capital, save:save};
 }
+function plan(i, r, sharePct){
+  var s = sharePct / 100, rate = i.rate / 100, monthly = r.base + r.extra; // profit once the money is working
+  var pot = Math.max(0, r.base) * s;                       // safe pot, from profit we already make
+  return {pot:pot,
+    maxReturns: rate > 0 ? pot / rate : Infinity,           // rate x raised <= pot
+    maxRepay: pot / (rate + 1 / i.months),                  // rate + repayment saving <= pot
+    fairRate: i.extraPct * s,                               // % of capital, = share of what the money earns
+    usedPct: r.base > 0 ? r.interest / r.base * 100 : Infinity,
+    giveAwayPct: i.extraPct > 0 ? i.rate / i.extraPct * 100 : Infinity,
+    oblig: r.interest + r.save, obligPct: monthly > 0 ? (r.interest + r.save) / monthly * 100 : Infinity};
+}
 function addMonths(ym, k){ // ym = "YYYY-MM"
   var p = String(ym || '2027-01').split('-'), y = +p[0], m = +p[1] - 1 + k;
   return (y + Math.floor(m / 12)) + '-' + String(m % 12 + 1).padStart(2, '0');
@@ -334,7 +370,7 @@ var COUNT = 3;
 var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 var state = {
-  active: 0, profit: '900,692', costs: '0',
+  active: 0, profit: '900,692', costs: '0', share: 50,
   sc: [
     {capital:1000000, rate:3, months:6, start:'2027-01', extra:10},
     {capital:2000000, rate:3, months:6, start:'2027-01', extra:5},
@@ -410,6 +446,7 @@ $('start').addEventListener('input', function(){ state.sc[state.active].start = 
   $(id).addEventListener('blur', function(){ this.value = state[id] = num(this.value).toLocaleString('en-US'); render(); });
 });
 
+$('share').addEventListener('input', function(){ state.share = +this.value; render(); });
 function pick(k){ state.active = Math.min(k, COUNT - 1); $('start').value = state.sc[state.active].start; render(); }
 
 var barsBuilt = 0;
@@ -458,6 +495,25 @@ function render(){
   tween($('k2'), r.totalPaid, rs); $('k2n').textContent = 'Incl. ' + rs(r.totalInterest) + ' profit';
   $('k3').textContent = mname(last.ym); $('k3n').textContent = rs(r.lastPay) + ' in one go';
   tween($('k4'), r.keep, rs);
+
+  /* how much can we raise */
+  var pl = plan(i, r, state.share), GOOD = '#8FD4B6', BAD = '#E5A397';
+  $('shareVal').textContent = state.share + '%';
+  $('shareFill').style.width = ((state.share - 10) / 90 * 100) + '%';
+  $('potT').textContent = state.share + '% of ' + rs(r.base) + ' = ' + rs(pl.pot) + ' a month for all investors';
+  $('maxRetQ').textContent = 'Most we can raise at ' + i.rate + '%';
+  $('maxRet').textContent = isFinite(pl.maxReturns) ? rs(pl.maxReturns) : 'No limit';
+  $('maxRep').textContent = rs(pl.maxRepay);
+  $('maxRepN').textContent = 'Also saving to repay it in ' + n + ' months';
+  $('fairRate').textContent = (Math.round(pl.fairRate * 100) / 100) + '% a month';
+  $('fairRateN').textContent = state.share + '% of the ' + i.extraPct + '% the money earns';
+  var chk = function(id, ok, t, sub){ $(id + 'i').style.background = ok ? GOOD : BAD; $(id).textContent = t; $(id).style.color = ok ? GOOD : BAD; $(id + 'n').textContent = sub; };
+  chk('c1', pl.usedPct <= state.share, 'Payments use ' + pl.usedPct.toFixed(1) + '% of profit (limit ' + state.share + '%)',
+    rs(r.interest) + ' a month out of ' + rs(r.base) + ' profit.');
+  chk('c2', i.rate <= pl.fairRate, 'Rate ' + i.rate + '% ' + (i.rate <= pl.fairRate ? 'is within' : 'is above') + ' the fair maximum of ' + (Math.round(pl.fairRate * 100) / 100) + '%',
+    'The investor gets ' + (isFinite(pl.giveAwayPct) ? pl.giveAwayPct.toFixed(0) + '%' : 'all') + ' of what their money earns us.');
+  chk('c3', pl.obligPct <= 100, 'Paying and saving to repay takes ' + (isFinite(pl.obligPct) ? pl.obligPct.toFixed(0) : '∞') + '% of monthly profit',
+    rs(r.interest) + ' to the investor + ' + rs(r.save) + ' saved each month, so ' + rs(r.lastPay) + ' is ready in ' + mname(last.ym) + '.');
 
   /* chart */
   var max = Math.max(r.lastPay, 1), step = Math.ceil(n / 12), gap = n > 24 ? '3px' : n > 12 ? '5px' : '10px';
