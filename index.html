@@ -234,6 +234,7 @@ tfoot td{font-weight:600;padding:10px 8px;border-bottom:0}
             <div class="hero-q" id="heroQ">Deal A · what we gain each month</div>
             <div class="hero-num tnum" id="heroGain"></div>
             <div class="hero-line" id="heroLine"></div>
+            <div class="hero-line" id="heroShare" style="margin-top:6px;font-weight:600"></div>
           </div>
           <span class="pill" id="heroPill"><i></i><em style="font-style:normal" id="heroPillT"></em></span>
         </div>
@@ -309,7 +310,8 @@ function calc(i){
   var base = i.profit - i.costs;
   var extra = i.capital * i.extraPct / 100;
   var totalInterest = interest * i.months;
-  return {interest:interest, rows:rows, totalInterest:totalInterest, totalPaid:totalInterest + i.capital,
+  var share = i.extraPct > 0 ? i.rate / i.extraPct * 100 : Infinity; // % of the money's profit the investor takes
+  return {share:share, maxSafeRate:i.extraPct * SAFE_SHARE / 100, interest:interest, rows:rows, totalInterest:totalInterest, totalPaid:totalInterest + i.capital,
     base:base, extra:extra, keep:base + extra - interest, gain:extra - interest,
     lastPay:interest + i.capital, save:save};
 }
@@ -330,6 +332,7 @@ var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','De
 var mname = function(ym){var p = ym.split('-'); return MON[+p[1]-1] + ' ' + p[0]};
 var PROFIT = {'Jul':930809,'Aug':879829,'Sep':891440,'Jul–Sep average':900692};
 var LETTERS = ['A','B','C'];
+var SAFE_SHARE = 50; // most of the money's profit we agree to hand to the investor
 var COUNT = 3;
 var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -344,7 +347,7 @@ var state = {
 
 var SLIDERS = [
   {k:'capital', label:"Investor's money", min:100000, max:10000000, step:50000, text:function(d){return rs(d.capital)}},
-  {k:'rate', label:'We pay them, per month', min:0.5, max:10, step:0.25, text:function(d){return d.rate + '%'}, hint:function(d,r){return rs(r.interest) + ' a month'}},
+  {k:'rate', label:'We pay them, per month', min:0.5, max:10, step:0.25, text:function(d){return d.rate + '%'}, hint:function(d,r){return rs(r.interest) + ' a month · safe up to ' + (+r.maxSafeRate.toFixed(2)) + '%'}},
   {k:'months', label:'Number of payments', min:1, max:36, step:1, text:function(d){return d.months + (d.months === 1 ? ' month' : ' months')}, hint:function(d,r){return 'Money goes back in ' + mname(r.rows[r.rows.length-1].ym)}},
   {k:'extra', label:'The money earns us, per month', min:0, max:30, step:0.5, text:function(d){return d.extra + '%'}, hint:function(d){return 'Must be over ' + d.rate + '% to be worth it'}}
 ];
@@ -442,6 +445,11 @@ function render(){
   var hg = $('heroGain'); hg.style.color = st.fg; tween(hg, r.gain, sg);
   $('heroGlow').style.background = 'radial-gradient(closest-side,' + st.glow + ',transparent)';
   $('heroLine').textContent = good ? 'The money earns more than we pay for it, so we come out ahead.' : 'We pay the investor more than the money earns, so we lose on this deal.';
+  var hs = $('heroShare'), safe = r.share <= SAFE_SHARE;
+  hs.style.color = safe ? 'var(--good)' : 'var(--bad)';
+  hs.textContent = isFinite(r.share)
+    ? 'The investor gets ' + Math.round(r.share) + '% of the profit their money makes (' + i.rate + '% ÷ ' + i.extraPct + '%). ' + (safe ? 'Safe: within the ' : 'Too high: over the ') + SAFE_SHARE + '% limit.'
+    : 'The money earns 0%, so any payment comes out of our own profit.';
   var hp = $('heroPill'); hp.style.background = st.bg; hp.style.color = st.fg; $('heroPillT').textContent = st.t;
   tween($('eqExtra'), r.extra, function(v){return '+' + rs(v)});
   tween($('eqPay'), r.interest, function(v){return '−' + rs(v)});
