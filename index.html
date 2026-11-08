@@ -385,8 +385,9 @@ var SLIDERS = [
   {k:'extra', label:'The money earns us, per month', min:0, max:30, step:0.5, text:function(d){return d.extra + '%'}, hint:function(d){return 'Must be over ' + d.rate + '% to be worth it'}}
 ];
 
-var verdict = function(good, ok){
-  return !good ? {t:'Loses money', fg:'#E5A397', bg:'rgba(229,163,151,.14)', glow:'rgba(229,163,151,.15)'}
+var verdict = function(good, ok, fair){
+  return good && fair === false ? {t:'Rate too high', fg:'#DCC08A', bg:'rgba(220,192,138,.14)', glow:'rgba(220,192,138,.14)'}
+    : !good ? {t:'Loses money', fg:'#E5A397', bg:'rgba(229,163,151,.14)', glow:'rgba(229,163,151,.15)'}
     : ok ? {t:'Good deal', fg:'#8FD4B6', bg:'rgba(143,212,182,.12)', glow:'rgba(143,212,182,.16)'}
     : {t:'Tight on cash', fg:'#DCC08A', bg:'rgba(220,192,138,.14)', glow:'rgba(220,192,138,.14)'};
 };
@@ -452,13 +453,13 @@ function pick(k){ state.active = Math.min(k, COUNT - 1); $('start').value = stat
 var barsBuilt = 0;
 function render(){
   var a = state.active, d = state.sc[a], i = inputs(d), r = calc(i), last = r.rows[r.rows.length - 1];
-  var good = r.gain >= 0, ok = r.keep >= r.save, n = i.months, st = verdict(good, ok);
+  var good = r.gain >= 0, ok = r.keep >= r.save, n = i.months, st = verdict(good, ok, i.rate <= i.extraPct * state.share / 100);
 
   $('thumb').style.transform = 'translateX(' + (a * (seg.firstElementChild.nextElementSibling.offsetWidth || 96)) + 'px)';
   Array.prototype.forEach.call(seg.querySelectorAll('button'), function(b, k){ b.setAttribute('aria-selected', k === a); });
 
   Array.prototype.forEach.call(cardsEl.children, function(c, k){
-    var dd = state.sc[k], ii = inputs(dd), rr = calc(ii), ss = verdict(rr.gain >= 0, rr.keep >= rr.save);
+    var dd = state.sc[k], ii = inputs(dd), rr = calc(ii), ss = verdict(rr.gain >= 0, rr.keep >= rr.save, ii.rate <= ii.extraPct * state.share / 100);
     c.setAttribute('aria-pressed', k === a);
     var p = c.querySelector('.pill'); p.style.background = ss.bg; p.style.color = ss.fg; p.querySelector('em').textContent = ss.t;
     var g = c.querySelector('.card-gain b'); g.style.color = ss.fg; tween(g, rr.gain, sg);
