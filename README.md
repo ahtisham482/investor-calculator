@@ -1,5 +1,5 @@
-# Investor Return Calculator
+# Investor Return Calculator (moved)
 
-Open `index.html` in a browser. Investor gets a fixed % of their money each month (default 3%), first payment one month after the money arrives, and the money is returned with the last payment (default month 6).
+The calculator now lives in the profit dashboard (`ahtisham482/profit-dashboard`, file `public/investors.html`, Investors tab), behind the dashboard password. There it reads live monthly profit and saves deals for everyone.
 
-Live link: https://ahtisham482.github.io/investor-calculator/
+This repository's page only says where it went. The old static copy of the profit dashboard was removed from here because this repository and its page are public.
