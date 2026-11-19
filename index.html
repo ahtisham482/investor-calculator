@@ -1,1010 +1,690 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Investor Return Calculator</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap">
 <style>
-:root{
-  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Geist",system-ui,sans-serif;
-  --txt:#F5F7FF; --txt2:rgba(235,240,255,.72); --txt3:rgba(235,240,255,.6); --txt4:rgba(235,240,255,.5);
-  --good:#8FD4B6; --warn:#DCC08A; --bad:#E5A397; --pay:#E2B894; --blue:#B4BEDB;
-  --spring:cubic-bezier(.3,1.4,.5,1);
-  --blur:blur(30px) saturate(170%);
-}
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;background:#0D1017;color:var(--txt);font:15px/1.5 var(--font);-webkit-font-smoothing:antialiased;
-  padding:28px max(16px,env(safe-area-inset-right)) 64px max(16px,env(safe-area-inset-left))}
-input:focus{outline:none}
-button{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
-.tnum{font-variant-numeric:tabular-nums}
-
-/* background glows */
-.orbs{position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none}
-.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.38}
-.o1{background:#46557F;width:46vw;height:46vw;top:-12vh;left:-10vw;animation:drift1 22s ease-in-out infinite}
-.o2{background:#3A6B68;width:38vw;height:38vw;top:40vh;left:60vw;animation:drift2 26s ease-in-out infinite}
-.o3{background:#5E5378;width:34vw;height:34vw;top:55vh;left:5vw;animation:drift3 30s ease-in-out infinite}
-.o4{background:#7A6552;width:24vw;height:24vw;top:-6vh;left:64vw;animation:drift2 34s ease-in-out infinite}
-@keyframes drift1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(8vw,6vh) scale(1.15)}}
-@keyframes drift2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-10vw,-4vh) scale(1.1)}}
-@keyframes drift3{0%,100%{transform:translate(0,0) scale(1.05)}50%{transform:translate(4vw,-8vh) scale(.95)}}
-@media (prefers-reduced-motion:reduce){.orb{animation:none}*{transition-duration:.01ms!important}}
-
-.page{position:relative;z-index:1;max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
-header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px}
-.eyebrow{font-size:13px;font-weight:500;color:var(--txt3)}
-h1{font-size:32px;line-height:1.1;margin:0;font-weight:700;letter-spacing:-.025em}
-h2{font-size:16px;margin:0;font-weight:600;white-space:nowrap}
-
-/* glass */
-.glass{background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.14);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 24px 60px rgba(0,0,0,.3);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
-.panel{border-radius:26px;padding:20px;display:flex;flex-direction:column;gap:20px;min-width:0}
-.panel.strong{background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.05));border-color:rgba(255,255,255,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 24px 60px rgba(0,0,0,.35)}
-
-/* deal switcher */
-.seg{position:relative;display:flex;padding:4px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.18);-webkit-backdrop-filter:blur(24px) saturate(170%);backdrop-filter:blur(24px) saturate(170%)}
-.seg-thumb{position:absolute;top:4px;bottom:4px;left:4px;width:96px;border-radius:999px;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 6px 18px rgba(0,0,0,.3);transition:transform .45s var(--spring)}
-.seg button{position:relative;width:96px;height:36px;border:0;background:transparent;border-radius:999px;cursor:pointer;font-weight:600;font-size:14px;color:var(--txt3);transition:color .3s}
-.seg button[aria-selected=true]{color:#fff}
-
-/* deal cards */
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
-.card{text-align:left;cursor:pointer;border-radius:22px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;color:var(--txt);
-  background:linear-gradient(160deg,rgba(255,255,255,.09),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.12);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 16px 40px rgba(0,0,0,.3);-webkit-backdrop-filter:blur(24px) saturate(170%);backdrop-filter:blur(24px) saturate(170%);
-  transition:transform .3s var(--spring),background .3s,border-color .3s}
-.card:hover{transform:translateY(-3px)}
-.card[aria-pressed=true]{background:linear-gradient(160deg,rgba(255,255,255,.22),rgba(255,255,255,.08));border-color:rgba(255,255,255,.45)}
-.card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.card-top>span:first-child{font-size:13px;font-weight:600;white-space:nowrap}
-.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;white-space:nowrap;padding:3px 9px;border-radius:999px}
-.pill i{width:6px;height:6px;border-radius:50%;background:currentColor}
-.card-gain{display:flex;align-items:baseline;gap:6px}
-.card-gain b{font-size:26px;font-weight:700;letter-spacing:-.025em}
-.card-gain span{font-size:13px;color:var(--txt3)}
-.card-terms{font-size:12.5px;color:rgba(235,240,255,.62);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-/* layout */
-.cols{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
-aside{flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:16px}
-main{flex:999 1 620px;min-width:0;display:flex;flex-direction:column;gap:16px}
-
-/* controls */
-.row{display:flex;flex-direction:column;gap:8px}
-.row-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.row label,.row .lbl{font-size:13.5px;color:var(--txt2)}
-.row-val{font-size:17px;font-weight:600;white-space:nowrap}
-.hint{font-size:12px;color:var(--txt4)}
-.panel-title{font-size:15px;font-weight:600}
-.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.panel-head small{font-size:12px;color:var(--txt4)}
-.slider{position:relative;height:28px;display:flex;align-items:center}
-.track{position:absolute;left:0;right:0;height:6px;border-radius:3px;background:rgba(255,255,255,.12);box-shadow:inset 0 1px 2px rgba(0,0,0,.4)}
-.fill{position:absolute;left:0;height:6px;border-radius:3px;background:linear-gradient(90deg,#8590B5,#C3CAE0)}
+body{margin:0;min-height:100vh;background:#0D1017;color:#F5F7FF;font:15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Display","Geist",system-ui,sans-serif;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+a{color:#B4BEDB}a:hover{color:#F5F7FF}
+input:focus{outline:none}button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #B4BEDB;outline-offset:2px}
 input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;width:100%;height:28px;margin:0;position:relative;cursor:pointer}
 input[type=range]::-webkit-slider-runnable-track{height:6px;background:transparent}
 input[type=range]::-moz-range-track{height:6px;background:transparent}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-9px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#DDE4FF 70%);border:1px solid rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(0,0,0,.45),0 0 0 6px rgba(255,255,255,.08);transition:transform .15s}
-input[type=range]:active::-webkit-slider-thumb{transform:scale(1.15)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-9px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#DDE4FF 70%);border:1px solid rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(0,0,0,.45),0 0 0 6px rgba(255,255,255,.08)}
 input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:0;box-shadow:0 4px 14px rgba(0,0,0,.45),0 0 0 6px rgba(255,255,255,.08)}
-.field{display:flex;align-items:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:14px}
-.field:focus-within{border-color:rgba(169,188,255,.7)}
-.field span{padding-left:14px;color:var(--txt4);font-size:14px}
-.field input{font:600 16px var(--font);font-variant-numeric:tabular-nums;color:var(--txt);background:transparent;border:0;padding:10px 14px 10px 8px;width:100%;min-width:0}
-input[type=month]{color-scheme:dark;font:500 15px var(--font);color:var(--txt);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:10px 14px;width:100%}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{font-weight:500;font-size:12.5px;border-radius:999px;padding:5px 11px;cursor:pointer;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:rgba(235,240,255,.75);transition:background .2s}
-.chip[aria-pressed=true]{background:rgba(255,255,255,.24);border-color:rgba(255,255,255,.5);color:#fff}
-.warn{display:flex;gap:8px;align-items:flex-start;background:rgba(229,163,151,.12);border:1px solid rgba(229,163,151,.3);color:#E9B4A9;border-radius:12px;padding:9px 12px;font-size:12.5px;line-height:1.4}
-.warn i{width:6px;height:6px;border-radius:50%;background:var(--bad);flex:none;margin-top:6px}
-.warn[hidden]{display:none}
-
-/* hero */
-.hero{position:relative;overflow:hidden;border-radius:30px;padding:28px;display:flex;flex-direction:column;gap:22px;
-  background:linear-gradient(160deg,rgba(255,255,255,.18),rgba(255,255,255,.05));border:1px solid rgba(255,255,255,.22);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 30px 80px rgba(0,0,0,.4);-webkit-backdrop-filter:blur(36px) saturate(180%);backdrop-filter:blur(36px) saturate(180%)}
-.hero-glow{position:absolute;top:-40%;right:-10%;width:60%;height:120%;pointer-events:none;transition:background .6s}
-.hero-top{position:relative;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:16px}
-.hero-main{display:flex;flex-direction:column;gap:6px}
-.hero-q{font-size:14px;font-weight:500;color:rgba(235,240,255,.7)}
-.hero-num{font-size:60px;line-height:1;font-weight:700;letter-spacing:-.04em;transition:color .4s}
-.hero-line{font-size:15px;color:rgba(235,240,255,.78);max-width:46ch;text-wrap:pretty}
-.hero .pill{font-size:13px;padding:7px 14px;gap:7px;border:1px solid rgba(255,255,255,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
-.hero .pill i{width:7px;height:7px}
-.eq{position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.eq>div{border-radius:18px;padding:14px 16px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;gap:2px}
-.eq small{font-size:12.5px;color:var(--txt3)}
-.eq b{font-size:20px;font-weight:600}
-.cash{position:relative;display:flex;flex-direction:column;gap:10px;border-top:1px solid rgba(255,255,255,.12);padding-top:18px}
-.cash-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px}
-.cash-head b{font-size:15px;font-weight:600}
-.cash-head span{font-size:13px;font-weight:600;white-space:nowrap}
-.bar{height:10px;border-radius:5px;background:rgba(255,255,255,.1);box-shadow:inset 0 1px 2px rgba(0,0,0,.4);overflow:hidden}
-.bar>div{height:100%;border-radius:5px;transition:width .6s cubic-bezier(.3,1.2,.5,1)}
-.cash p{margin:0;font-size:13px;color:rgba(235,240,255,.62);text-wrap:pretty}
-
-/* kpis */
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
-.kpi{border-radius:20px;padding:14px 16px;display:flex;flex-direction:column;gap:2px;box-shadow:inset 0 1px 0 rgba(255,255,255,.18);background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.14);-webkit-backdrop-filter:blur(24px) saturate(170%);backdrop-filter:blur(24px) saturate(170%)}
-.kpi small{font-size:12.5px;color:var(--txt3)}
-.kpi b{font-size:19px;font-weight:600;white-space:nowrap}
-.kpi span{font-size:12px;color:var(--txt4)}
-
-/* chart */
-.chart-panel{border-radius:26px;padding:22px;display:flex;flex-direction:column;gap:18px;min-width:0}
-.chart-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:10px}
-.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:rgba(235,240,255,.62)}
-.legend span{display:flex;align-items:center;gap:6px;white-space:nowrap}
-.legend i{display:inline-block}
-.chart{display:flex;gap:10px}
-.chart-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
-.plot{position:relative;height:220px;border-bottom:1px solid rgba(255,255,255,.14)}
-.gl{position:absolute;left:0;right:0;border-top:1px dashed rgba(255,255,255,.1)}
-.bars{position:absolute;inset:0;display:flex;align-items:flex-end}
-.bcol{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end}
-.b-back{background:linear-gradient(180deg,rgba(226,184,148,.45),rgba(226,184,148,.2));border:1px solid rgba(226,184,148,.5);border-bottom:0;border-radius:8px 8px 0 0;height:0;transition:height .6s cubic-bezier(.3,1.2,.5,1)}
-.b-back[style*="height: 0%"]{border-width:0}
-.b-int{min-height:3px;height:0;background:linear-gradient(180deg,#E2B894,#C49573);transition:height .6s cubic-bezier(.3,1.2,.5,1)}
-.line{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;filter:drop-shadow(0 0 4px rgba(154,166,204,.3))}
-.xlabels{display:flex}
-.xlabels div{flex:1;min-width:0;text-align:center;font-size:11.5px;color:rgba(235,240,255,.55);white-space:nowrap}
-.yaxis{width:58px;flex:none;position:relative;height:220px;font-size:11.5px;color:var(--txt4)}
-.yaxis div{position:absolute;left:0}
-.tbl{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:520px;font-variant-numeric:tabular-nums}
-th{padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.12);font-size:12px;color:rgba(235,240,255,.55);font-weight:500;text-align:right}
-td{padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.07);text-align:right}
-th:nth-child(-n+2),td:nth-child(-n+2){text-align:left}
-td:first-child{color:var(--txt4)}
-th.sv,td.sv{color:var(--blue)}
-tr.last td{background:rgba(226,184,148,.1);font-weight:600}
-tfoot td{font-weight:600;padding:10px 8px;border-bottom:0}
-
-/* assumptions */
-.notes{border-radius:22px;padding:18px 20px;display:flex;flex-direction:column;gap:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1)}
-.notes h2{font-size:13.5px;color:rgba(235,240,255,.8);white-space:normal}
-.notes-list{display:flex;flex-direction:column;gap:9px;font-size:13px;color:var(--txt2)}
-.note{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;align-items:baseline}
-.tag{justify-self:start;font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;background:rgba(154,166,204,.14);color:#C3CAE0}
-.tag.guess{background:rgba(226,184,148,.16);color:#E8C7AA}
-.checks{display:flex;flex-direction:column;gap:10px}
-.check{display:flex;gap:12px;align-items:flex-start;border-radius:16px;padding:12px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
-.check i{width:9px;height:9px;border-radius:50%;flex:none;margin-top:6px}
-.check b{display:block;font-size:14px;font-weight:600}
-.check span{font-size:12.5px;color:var(--txt3)}
-.summary p{margin:0;font-size:15px;line-height:1.6;color:var(--txt2);max-width:72ch}
-.summary p b{color:var(--txt)}
-.uses{display:flex;flex-direction:column;gap:10px}
-.use{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;align-items:center}
-.use>input{grid-column:1/-1}
-.use label{display:flex;align-items:center;justify-content:space-between;gap:6px;white-space:nowrap;font-size:11.5px;color:var(--txt4)}
-.use label input{width:54px;padding:8px 6px}
-
-.use input{font:500 14px var(--font);color:var(--txt);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:8px 10px;width:100%;min-width:0}
-.use input[type=number]{text-align:right;font-variant-numeric:tabular-nums}
-.big{font-size:22px;font-weight:700;letter-spacing:-.02em}
-.mc-in{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
-.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:13.5px;color:var(--txt2)}
-.steps b{color:var(--txt)}
-.tag.none{background:rgba(255,255,255,.1);color:rgba(235,240,255,.8)}
-
-@media (max-width:560px){
-  h1{font-size:28px}.hero{padding:22px 18px}.hero-num{font-size:46px}
-  .seg-thumb,.seg button{width:76px}
-  .note{grid-template-columns:1fr;gap:4px}
-}
-.how{background:none;border:0;padding:0;margin-top:4px;color:var(--blue);font-size:12.5px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px;text-align:left}
-.how::before{content:"?";display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;border:1px solid currentColor;font-size:10px;font-weight:700}
-.tn{cursor:pointer;text-decoration:underline dotted 1px;text-underline-offset:4px;text-decoration-color:rgba(235,240,255,.4)}
-button.tn{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;letter-spacing:inherit;text-align:inherit}
-.tn:hover{text-decoration-color:currentColor}
-.qa{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px 22px}
-.qa h3{margin:0 0 4px;font-size:15px;font-weight:600;color:var(--txt)}
-.qa p,.qa ul{margin:0;color:var(--txt2);font-size:14.5px;line-height:1.6}
-.qa ul{padding-left:18px}.qa p+p{margin-top:6px}
-.tp{position:fixed;inset:0;z-index:50;display:flex;justify-content:flex-end}
-.tp[hidden]{display:none}
-.tp-bg{position:absolute;inset:0;background:rgba(5,7,12,.6)}
-.tp-card{position:relative;width:min(440px,100%);height:100%;overflow-y:auto;background:#151a24;border-left:1px solid rgba(255,255,255,.12);padding:16px 20px 32px;display:flex;flex-direction:column;gap:10px;outline:none}
-.tp-top{display:flex;align-items:center;gap:8px}
-.tp-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:6px 12px;cursor:pointer}
-#tpX{margin-left:auto}
-.tp-card h3{margin:2px 0 0;font-size:17px}
-.tp-card h4{margin:10px 0 0;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--txt4);font-weight:600}
-.tp-card p{margin:0;color:var(--txt2);font-size:14.5px;line-height:1.55}
-.tp-val{font-size:28px;font-weight:700;letter-spacing:-.02em}
-.tp-sum{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
-.tp-chip{display:inline-flex;flex-direction:column;align-items:flex-start;gap:1px;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);cursor:pointer;text-align:left;max-width:100%}
-.tp-chip b{font-size:14.5px}.tp-chip small{font-size:11.5px;color:var(--txt3)}
-.tp-chip:hover{border-color:var(--blue)}
-.tp-op{color:var(--txt3);font-weight:600}
-.tp-res{font-size:16px}
-.tp-card .tp-hint{font-size:12.5px;color:var(--txt4)}
-.tp-tag{align-self:flex-start;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:99px;border:0;background:rgba(255,255,255,.1);color:var(--txt2);cursor:pointer}
-.t-data{background:rgba(143,212,182,.16);color:var(--good)}.t-choice{background:rgba(180,190,219,.18);color:var(--blue)}.t-guess{background:rgba(220,192,138,.16);color:var(--warn)}
-.tp-go{align-self:flex-start;margin-top:6px;background:var(--blue);color:#0D1017;border:0;border-radius:10px;padding:8px 14px;font-weight:600;cursor:pointer}
-body.tp-open{overflow:hidden}
-@media (max-width:560px){.tp{align-items:flex-end}.tp-card{height:auto;max-height:88vh;border-left:0;border-top:1px solid rgba(255,255,255,.14);border-radius:20px 20px 0 0;padding-bottom:max(28px,env(safe-area-inset-bottom))}}
+input[type=month]{color-scheme:dark}
+input[type=checkbox]{accent-color:#B4BEDB;width:15px;height:15px;margin:0}
 </style>
-</head>
-<body>
-<div class="orbs" aria-hidden="true"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div><div class="orb o4"></div></div>
+</helmet>
+<div style="position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none">
+  <div style="position:absolute;border-radius:50%;filter:blur(90px);opacity:.38;background:#46557F;width:46vw;height:46vw;top:-12vh;left:-10vw"></div>
+  <div style="position:absolute;border-radius:50%;filter:blur(90px);opacity:.38;background:#3A6B68;width:38vw;height:38vw;top:40vh;left:60vw"></div>
+  <div style="position:absolute;border-radius:50%;filter:blur(90px);opacity:.38;background:#5E5378;width:34vw;height:34vw;top:55vh;left:5vw"></div>
+  <div style="position:absolute;border-radius:50%;filter:blur(90px);opacity:.38;background:#7A6552;width:24vw;height:24vw;top:-6vh;left:64vw"></div>
+</div>
 
-<div class="page">
+<div style="position:relative;z-index:1;max-width:820px;margin:0 auto;padding:28px 16px 64px;display:flex;flex-direction:column;gap:16px">
   <header>
-    <div>
-      <div class="eyebrow">Investor deals</div>
-      <h1>Return Calculator</h1>
-    </div>
-    <div class="seg" role="tablist" aria-label="Choose a deal" id="seg">
-      <div class="seg-thumb" id="thumb"></div>
-    </div>
+    <div style="font-size:13px;font-weight:500;color:rgba(235,240,255,.6)">{{ eyebrow }}</div>
+    <h1 style="font-size:32px;line-height:1.1;margin:0;font-weight:700;letter-spacing:-.025em">How much can we raise?</h1>
   </header>
 
-  <div class="cards" id="cards"></div>
+  <sc-if value="{{ showExample }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;border-radius:18px;padding:12px 16px;background:rgba(180,190,219,.12);border:1px solid rgba(180,190,219,.3)">
+      <span style="font-size:13.5px;color:#DDE2F2;flex:1 1 260px">These are example numbers. Enter your business's numbers to get your own answer.</span>
+      <div style="display:flex;gap:8px">
+        <button type="button" onClick="{{ startBlank }}" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer">Start blank</button>
+        <button type="button" onClick="{{ openDrawer }}" style="background:#B4BEDB;color:#0D1017;border:0;border-radius:10px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer">Enter my numbers</button>
+      </div>
+    </div>
+  </sc-if>
 
-  <section class="panel glass summary" style="gap:10px">
-    <h2 id="sumT">The short answer</h2>
-    <p class="hint" style="margin:0">Tap any underlined number to see how it is worked out.</p>
-    <div id="sum" class="qa"></div>
+  <section aria-live="polite" style="position:relative;overflow:hidden;border-radius:30px;padding:26px;display:flex;flex-direction:column;gap:22px;background:linear-gradient(160deg,rgba(255,255,255,.18),rgba(255,255,255,.05));border:1px solid rgba(255,255,255,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 30px 80px rgba(0,0,0,.4);backdrop-filter:blur(36px) saturate(180%)">
+    <div style="position:absolute;top:-40%;right:-10%;width:60%;height:120%;pointer-events:none;background:radial-gradient(closest-side,{{ st.bg }},transparent)"></div>
+
+    <div style="position:relative;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
+        <label style="font-size:14px;font-weight:500;color:rgba(235,240,255,.72)">Amount to raise</label>
+        <button type="button" onClick="{{ t.capital }}" style="all:unset;cursor:pointer;font-size:30px;font-weight:700;letter-spacing:-.03em;text-decoration:underline dotted 1px;text-underline-offset:6px;text-decoration-color:rgba(235,240,255,.4)">{{ v.capital }}</button>
+      </div>
+      <div style="position:relative;height:34px;display:flex;align-items:center">
+        <div style="position:absolute;left:0;right:0;height:10px;border-radius:5px;box-shadow:inset 0 1px 2px rgba(0,0,0,.4);background:{{ amt.track }}"></div>
+        <div style="position:absolute;top:-2px;bottom:-2px;width:2px;border-radius:1px;background:#F5F7FF;left:{{ amt.limitPos }}"></div>
+        <input type="range" aria-label="Amount to raise" min="{{ amt.min }}" max="{{ amt.max }}" step="{{ amt.step }}" value="{{ s.capital }}" onChange="{{ on.capital }}">
+      </div>
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 14px;font-size:12.5px;color:rgba(235,240,255,.6)">
+        <span style="display:flex;align-items:center;gap:6px"><i style="width:10px;height:10px;border-radius:3px;background:rgba(143,212,182,.7)"></i>Safe</span>
+        <span style="display:flex;align-items:center;gap:6px"><i style="width:10px;height:10px;border-radius:3px;background:rgba(220,192,138,.7)"></i>Tight</span>
+        <span style="display:flex;align-items:center;gap:6px"><i style="width:10px;height:10px;border-radius:3px;background:rgba(229,163,151,.6)"></i>Too much</span>
+        <span style="margin-left:auto">Safe limit <button type="button" onClick="{{ t.limit }}" style="all:unset;cursor:pointer;color:#F5F7FF;font-weight:600;text-decoration:underline dotted 1px;text-underline-offset:4px;text-decoration-color:rgba(235,240,255,.4)">{{ v.limit }}</button></span>
+      </div>
+    </div>
+
+    <div style="position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px 24px">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><label style="font-size:13.5px;color:rgba(235,240,255,.72)">We pay them, per month</label><button type="button" onClick="{{ t.rate }}" style="all:unset;cursor:pointer;font-size:17px;font-weight:600;text-decoration:underline dotted 1px;text-underline-offset:4px;text-decoration-color:rgba(235,240,255,.4)">{{ v.rate }}</button></div>
+        <div style="position:relative;height:28px;display:flex;align-items:center">
+          <div style="position:absolute;left:0;right:0;height:6px;border-radius:3px;background:rgba(255,255,255,.12);box-shadow:inset 0 1px 2px rgba(0,0,0,.4)"></div>
+          <div style="position:absolute;left:0;height:6px;border-radius:3px;background:linear-gradient(90deg,#8590B5,#C3CAE0);width:{{ rateFill }}"></div>
+          <input type="range" aria-label="Monthly rate" min="0.5" max="10" step="0.25" value="{{ s.rate }}" onChange="{{ on.rate }}">
+        </div>
+        <div style="font-size:12px;color:rgba(235,240,255,.5)">{{ v.interest }} a month · highest rate worth paying <button type="button" onClick="{{ t.fair }}" style="all:unset;cursor:pointer;color:rgba(235,240,255,.72);text-decoration:underline dotted 1px;text-underline-offset:3px;text-decoration-color:rgba(235,240,255,.4)">{{ v.fair }}</button></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><label style="font-size:13.5px;color:rgba(235,240,255,.72)">Number of payments</label><button type="button" onClick="{{ t.months }}" style="all:unset;cursor:pointer;font-size:17px;font-weight:600;text-decoration:underline dotted 1px;text-underline-offset:4px;text-decoration-color:rgba(235,240,255,.4)">{{ v.months }}</button></div>
+        <div style="position:relative;height:28px;display:flex;align-items:center">
+          <div style="position:absolute;left:0;right:0;height:6px;border-radius:3px;background:rgba(255,255,255,.12);box-shadow:inset 0 1px 2px rgba(0,0,0,.4)"></div>
+          <div style="position:absolute;left:0;height:6px;border-radius:3px;background:linear-gradient(90deg,#8590B5,#C3CAE0);width:{{ monthsFill }}"></div>
+          <input type="range" aria-label="Number of payments" min="1" max="36" step="1" value="{{ s.months }}" onChange="{{ on.months }}">
+        </div>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;color:rgba(235,240,255,.5)">Money arrives <input type="month" value="{{ s.start }}" onChange="{{ on.start }}" style="font:500 12.5px inherit;color:#F5F7FF;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:2px 6px"> · returned <button type="button" onClick="{{ t.lastMonth }}" style="all:unset;cursor:pointer;color:rgba(235,240,255,.72);text-decoration:underline dotted 1px;text-underline-offset:3px;text-decoration-color:rgba(235,240,255,.4)">{{ v.lastMonth }}</button></div>
+      </div>
+    </div>
+
+    <div style="position:relative;display:flex;flex-direction:column;gap:14px;border-top:1px solid rgba(255,255,255,.12);padding-top:20px">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px">
+        <b style="font-size:15px;font-weight:600">Where our monthly profit goes</b>
+        <span style="display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;padding:5px 12px;border-radius:999px;background:{{ st.bg }};color:{{ st.fg }}"><i style="width:7px;height:7px;border-radius:50%;background:currentColor"></i>{{ st.head }}</span>
+      </div>
+      <div style="position:relative">
+        <div style="display:flex;height:44px;border-radius:12px;overflow:hidden;background:rgba(255,255,255,.08);box-shadow:inset 0 1px 2px rgba(0,0,0,.4)">
+          <div style="background:linear-gradient(180deg,#E2B894,#C49573);width:{{ split.pay }}"></div>
+          <div style="background:linear-gradient(180deg,#B4BEDB,#8590B5);width:{{ split.save }}"></div>
+        </div>
+        <div style="position:absolute;top:-6px;bottom:-6px;width:2px;background:#F5F7FF;left:{{ split.limit }}"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;font-size:13px">
+        <div style="display:flex;gap:8px;align-items:flex-start"><i style="width:10px;height:10px;border-radius:3px;background:#E2B894;margin-top:5px;flex:none"></i><div><button type="button" onClick="{{ t.interest }}" style="all:unset;cursor:pointer;font-weight:600;font-size:15px;text-decoration:underline dotted 1px;text-underline-offset:3px;text-decoration-color:rgba(235,240,255,.4)">{{ v.interest }}</button><div style="color:rgba(235,240,255,.6)">to the investor</div></div></div>
+        <div style="display:flex;gap:8px;align-items:flex-start"><i style="width:10px;height:10px;border-radius:3px;background:#B4BEDB;margin-top:5px;flex:none"></i><div><button type="button" onClick="{{ t.save }}" style="all:unset;cursor:pointer;font-weight:600;font-size:15px;text-decoration:underline dotted 1px;text-underline-offset:3px;text-decoration-color:rgba(235,240,255,.4)">{{ v.save }}</button><div style="color:rgba(235,240,255,.6)">put aside to repay</div></div></div>
+        <div style="display:flex;gap:8px;align-items:flex-start"><i style="width:2px;height:14px;background:#F5F7FF;margin:3px 4px 0;flex:none"></i><div><button type="button" onClick="{{ t.pot }}" style="all:unset;cursor:pointer;font-weight:600;font-size:15px;text-decoration:underline dotted 1px;text-underline-offset:3px;text-decoration-color:rgba(235,240,255,.4)">{{ v.pot }}</button><div style="color:rgba(235,240,255,.6)">most investors can take (<button type="button" onClick="{{ t.share }}" style="all:unset;cursor:pointer;text-decoration:underline dotted 1px;text-underline-offset:3px;text-decoration-color:rgba(235,240,255,.4)">{{ v.share }}</button> of <button type="button" onClick="{{ t.base }}" style="all:unset;cursor:pointer;text-decoration:underline dotted 1px;text-underline-offset:3px;text-decoration-color:rgba(235,240,255,.4)">{{ v.base }}</button>)</div></div></div>
+      </div>
+      <p style="margin:0;font-size:13px;color:rgba(235,240,255,.62);text-wrap:pretty"><sc-for list="{{ heroLine }}" as="x" hint-placeholder-count="1"><sc-if value="{{ x.isT }}" hint-placeholder-val="{{ true }}">{{ x.text }}</sc-if><sc-if value="{{ x.isN }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ x.go }}" style="all:unset;cursor:pointer;color:{{ x.fg }};text-decoration:underline dotted 1px;text-underline-offset:3px;text-decoration-color:rgba(235,240,255,.4)">{{ x.val }}</button></sc-if></sc-for></p>
+    </div>
   </section>
-  <div class="cols">
-    <aside>
-      <div class="panel glass strong">
-        <div class="panel-title" id="termsTitle">Deal A terms</div>
-        <div id="sliders"></div>
-        <div class="row">
-          <label for="start">Money arrives</label>
-          <input id="start" type="month" value="2027-01">
-        </div>
-      </div>
 
-      <div class="panel glass" style="gap:16px">
-        <div class="panel-head"><div class="panel-title">Our business</div><small>Same for all deals</small></div>
-        <div class="row">
-          <label for="profit">Net profit per month</label>
-          <div class="field"><span>Rs</span><input id="profit" type="text" inputmode="numeric" value="900,692"></div>
-          <div class="chips" id="profChips"></div>
-          <div class="hint">After product cost, courier, tax, ads and Shopify. From the live dashboard.</div>
-        </div>
-        <div class="row">
-          <label for="costs">Office costs and salaries per month</label>
-          <div class="field"><span>Rs</span><input id="costs" type="text" inputmode="numeric" value="0"></div>
-          <div class="warn" id="costWarn"><i></i><span>Not on the dashboard yet, so real profit is lower than shown.</span></div>
-        </div>
-        <div class="row">
-          <label for="tied">Money tied up in the business</label>
-          <div class="field"><span>Rs</span><input id="tied" type="text" inputmode="numeric" value="4,000,000"></div>
-          <div class="hint">Stock in the warehouse + stock on the way + COD money not paid yet. Estimate for now.</div>
-          <button type="button" class="how" data-n="tied">Where does this come from?</button>
-        </div>
-        <div class="row">
-          <div class="row-head"><span class="lbl">Our earning rate</span><span class="row-val tnum" id="earnVal"></span></div>
-          <div class="hint" id="earnHint"></div>
-          <button type="button" class="how" data-n="earn">Where does this come from?</button>
-        </div>
-        <div class="row">
-          <div class="row-head"><label for="share">Safe share of profit for all investors</label><span class="row-val tnum" id="shareVal"></span></div>
-          <div class="slider"><div class="track"></div><div class="fill" id="shareFill"></div><input type="range" id="share" min="10" max="100" step="5" value="50"></div>
-          <div class="hint">The most of our monthly profit we allow investor payments to take.</div>
-          <button type="button" class="how" data-n="share">Where does this come from?</button>
-        </div>
-      </div>
+  <button type="button" onClick="{{ openDrawer }}" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;text-align:left;cursor:pointer;border-radius:20px;padding:14px 18px;background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.18);backdrop-filter:blur(24px) saturate(170%)">
+    <span style="font-size:15px;font-weight:600">Our business</span>
+    <span style="font-size:13px;color:rgba(235,240,255,.6)">Profit {{ v.base }} a month · investors may take {{ v.share }}</span>
+    <span style="margin-left:auto;font-size:13px;font-weight:600;color:#B4BEDB">Edit numbers</span>
+  </button>
 
-      <div class="panel glass" style="gap:14px">
-        <div class="panel-head"><div class="panel-title">How we will use the money</div><small>Same for all deals</small></div>
-        <div class="uses">
-          <div id="uses"></div>
-        </div>
-        <div class="warn" id="useWarn" hidden><i></i><span id="useWarnT"></span></div>
-        <div class="row">
-          <div class="row-head"><span class="lbl">New money should earn</span><span class="row-val tnum" id="newRateVal"></span></div>
-          <div class="hint" id="newRateHint"></div>
-          <button type="button" class="how" data-n="blendSafe">Where does this come from?</button>
-        </div>
-      </div>
-    </aside>
-
-    <main>
-
-      <section class="hero" aria-live="polite">
-        <div class="hero-glow" id="heroGlow"></div>
-        <div class="hero-top">
-          <div class="hero-main">
-            <div class="hero-q" id="heroQ">Deal A · what we gain each month</div>
-            <div class="hero-num tnum" id="heroGain"></div>
-            <div class="hero-line" id="heroLine"></div>
-            <button type="button" class="how" data-n="gain">Where does this come from?</button>
+  <div style="border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.12);overflow:hidden">
+    <button type="button" onClick="{{ tg.qa }}" style="all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:flex;align-items:center;gap:10px;padding:16px 20px"><span style="font-size:15px;font-weight:600">The short answer</span><span style="font-size:13px;color:rgba(235,240,255,.5)">7 questions, in plain words</span><span style="margin-left:auto;font-size:20px;color:rgba(235,240,255,.6)">{{ ch.qa }}</span></button>
+    <sc-if value="{{ op.qa }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:0 20px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px 24px">
+        <sc-for list="{{ qa }}" as="q" hint-placeholder-count="4">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <h3 style="margin:0 0 2px;font-size:15px;font-weight:600">{{ q.q }}</h3>
+            <sc-for list="{{ q.items }}" as="it" hint-placeholder-count="1">
+              <div style="display:flex;gap:8px;font-size:14px;line-height:1.6;color:rgba(235,240,255,.72)">
+                <sc-if value="{{ it.b }}" hint-placeholder-val="{{ false }}"><span style="flex:none;color:rgba(235,240,255,.4)">•</span></sc-if>
+                <span><sc-for list="{{ it.segs }}" as="x" hint-placeholder-count="1"><sc-if value="{{ x.isT }}" hint-placeholder-val="{{ true }}">{{ x.text }}</sc-if><sc-if value="{{ x.isN }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ x.go }}" style="all:unset;cursor:pointer;color:{{ x.fg }};text-decoration:underline dotted 1px;text-underline-offset:3px;text-decoration-color:rgba(235,240,255,.4)">{{ x.val }}</button></sc-if></sc-for></span>
+              </div>
+            </sc-for>
           </div>
-          <span class="pill" id="heroPill"><i></i><em style="font-style:normal" id="heroPillT"></em></span>
-        </div>
-        <div class="eq">
-          <div><small>The money earns us</small><b class="tnum" id="eqExtra"></b><button type="button" class="how" data-n="extra">Where does this come from?</button></div>
-          <div><small>We pay the investor</small><b class="tnum" id="eqPay" style="color:var(--pay)"></b><button type="button" class="how" data-n="interest">Where does this come from?</button></div>
-          <div><small id="eqTotalQ">Over 6 months</small><b class="tnum" id="eqTotal"></b><button type="button" class="how" data-n="totalGain">Where does this come from?</button></div>
-        </div>
-        <div class="cash">
-          <div class="cash-head"><b id="saveT"></b><span id="cashPill"></span></div>
-          <div class="bar"><div id="cashBar"></div></div>
-          <p id="cashText"></p>
-          <button type="button" class="how" data-n="save">Where does this come from?</button>
-        </div>
-      </section>
-
-      <div class="kpis">
-        <div class="kpi"><small>Investor gets monthly</small><b class="tnum" id="k1" style="color:var(--pay)"></b><span id="k1n"></span><button type="button" class="how" data-n="interest">Where does this come from?</button></div>
-        <div class="kpi"><small>Investor gets in total</small><b class="tnum" id="k2" style="color:var(--pay)"></b><span id="k2n"></span><button type="button" class="how" data-n="totalPaid">Where does this come from?</button></div>
-        <div class="kpi"><small>Money goes back</small><b id="k3"></b><span id="k3n"></span><button type="button" class="how" data-n="lastMonth">Where does this come from?</button></div>
-        <div class="kpi"><small>We keep monthly</small><b class="tnum" id="k4" style="color:var(--blue)"></b><span>After the investor is paid</span><button type="button" class="how" data-n="keep">Where does this come from?</button></div>
+        </sc-for>
       </div>
+    </sc-if>
+  </div>
 
-      <section class="chart-panel glass" aria-live="polite">
-        <div class="chart-head"><h2>How much can we raise?</h2><span class="hint" id="potT"></span></div>
-        <div class="kpis">
-          <div class="kpi"><small id="maxRetQ">Most we can raise at 3%</small><b class="tnum" id="maxRet" style="color:var(--blue)"></b><span>Monthly payments stay inside the safe share</span><button type="button" class="how" data-n="maxReturns">Where does this come from?</button></div>
-          <div class="kpi"><small>Most we can raise and still repay</small><b class="tnum" id="maxRep" style="color:var(--blue)"></b><span id="maxRepN"></span><button type="button" class="how" data-n="maxRepay">Where does this come from?</button></div>
-          <div class="kpi"><small>Highest fair rate</small><b class="tnum" id="fairRate" style="color:var(--blue)"></b><span id="fairRateN"></span><button type="button" class="how" data-n="fairRate">Where does this come from?</button></div>
-        </div>
-        <div class="checks">
-          <div class="check"><i id="c1i"></i><div><b id="c1"></b><span id="c1n"></span><button type="button" class="how" data-n="usedPct">Where does this come from?</button></div></div>
-          <div class="check"><i id="c2i"></i><div><b id="c2"></b><span id="c2n"></span><button type="button" class="how" data-n="giveAway">Where does this come from?</button></div></div>
-          <div class="check"><i id="c3i"></i><div><b id="c3"></b><span id="c3n"></span><button type="button" class="how" data-n="obligPct">Where does this come from?</button></div></div>
-        </div>
-      </section>
-
-      <section class="chart-panel glass">
-        <div class="chart-head">
-          <h2>Payments and savings</h2>
-          <div class="legend">
-            <span><i style="width:10px;height:10px;border-radius:3px;background:#CFA382"></i>Monthly profit</span>
-            <span><i style="width:10px;height:10px;border-radius:3px;background:rgba(226,184,148,.35);border:1px solid rgba(226,184,148,.6)"></i>Money back</span>
-            <span><i style="width:14px;height:2px;background:#9AA6CC"></i>Saved for repayment</span>
-          </div>
-        </div>
-        <div class="chart">
-          <div class="chart-body">
-            <div class="plot">
-              <div class="gl" style="top:0"></div><div class="gl" style="top:50%"></div>
-              <div class="bars" id="bars"></div>
-              <svg class="line" viewBox="0 0 100 100" preserveAspectRatio="none"><polyline id="linePts" fill="none" stroke="#B4BEDB" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"></polyline></svg>
+  <div style="border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.12);overflow:hidden">
+    <button type="button" onClick="{{ tg.full }}" style="all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:flex;align-items:center;gap:10px;padding:16px 20px"><span style="font-size:15px;font-weight:600">Full breakdown</span><span style="font-size:13px;color:{{ checksFg }}">{{ checksLine }}</span><span style="margin-left:auto;font-size:20px;color:rgba(235,240,255,.6)">{{ ch.full }}</span></button>
+    <sc-if value="{{ op.full }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:0 20px 20px;display:flex;flex-direction:column;gap:16px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px">
+          <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="8">
+            <div style="border-radius:18px;padding:12px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;gap:2px">
+              <small style="font-size:12.5px;color:rgba(235,240,255,.6)">{{ k.label }}</small>
+              <button type="button" onClick="{{ k.go }}" style="all:unset;cursor:pointer;font-size:18px;font-weight:600;color:{{ k.fg }};text-decoration:underline dotted 1px;text-underline-offset:4px;text-decoration-color:rgba(235,240,255,.4);white-space:nowrap">{{ k.val }}</button>
+              <span style="font-size:12px;color:rgba(235,240,255,.5)">{{ k.note }}</span>
             </div>
-            <div class="xlabels" id="xlabels"></div>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ checks }}" as="c" hint-placeholder-count="4">
+            <div style="display:flex;gap:12px;align-items:flex-start;border-radius:16px;padding:12px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)">
+              <i style="width:9px;height:9px;border-radius:50%;flex:none;margin-top:6px;background:{{ c.fg }}"></i>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <b style="font-size:14px;font-weight:600;color:{{ c.fg }}"><sc-for list="{{ c.title }}" as="x" hint-placeholder-count="1"><sc-if value="{{ x.isT }}" hint-placeholder-val="{{ true }}">{{ x.text }}</sc-if><sc-if value="{{ x.isN }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ x.go }}" style="all:unset;cursor:pointer;text-decoration:underline dotted 1px;text-underline-offset:3px;text-decoration-color:rgba(235,240,255,.4)">{{ x.val }}</button></sc-if></sc-for></b>
+                <span style="font-size:12.5px;color:rgba(235,240,255,.6)"><sc-for list="{{ c.sub }}" as="x" hint-placeholder-count="1"><sc-if value="{{ x.isT }}" hint-placeholder-val="{{ true }}">{{ x.text }}</sc-if><sc-if value="{{ x.isN }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ x.go }}" style="all:unset;cursor:pointer;color:rgba(235,240,255,.85);text-decoration:underline dotted 1px;text-underline-offset:3px;text-decoration-color:rgba(235,240,255,.4)">{{ x.val }}</button></sc-if></sc-for></span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.12);overflow:hidden">
+    <button type="button" onClick="{{ tg.pay }}" style="all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:flex;align-items:center;gap:10px;padding:16px 20px"><span style="font-size:15px;font-weight:600">Payments month by month</span><span style="font-size:13px;color:rgba(235,240,255,.5)">Investor gets {{ v.totalPaid }} in total</span><span style="margin-left:auto;font-size:20px;color:rgba(235,240,255,.6)">{{ ch.pay }}</span></button>
+    <sc-if value="{{ op.pay }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:0 20px 20px;display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:rgba(235,240,255,.62)">
+          <span style="display:flex;align-items:center;gap:6px"><i style="width:10px;height:10px;border-radius:3px;background:#CFA382"></i>Monthly payment</span>
+          <span style="display:flex;align-items:center;gap:6px"><i style="width:10px;height:10px;border-radius:3px;background:rgba(226,184,148,.35);border:1px solid rgba(226,184,148,.6)"></i>Money back</span>
+          <span style="display:flex;align-items:center;gap:6px"><i style="width:14px;height:2px;background:#9AA6CC"></i>Put aside so far</span>
+        </div>
+        <div style="display:flex;gap:10px">
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+            <div style="position:relative;height:180px;border-bottom:1px solid rgba(255,255,255,.14)">
+              <div style="position:absolute;left:0;right:0;top:0;border-top:1px dashed rgba(255,255,255,.1)"></div>
+              <div style="position:absolute;left:0;right:0;top:50%;border-top:1px dashed rgba(255,255,255,.1)"></div>
+              <div style="position:absolute;inset:0;display:flex;align-items:flex-end;gap:{{ chartGap }}">
+                <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+                  <div title="{{ r.title }}" style="flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end">
+                    <div style="background:linear-gradient(180deg,rgba(226,184,148,.45),rgba(226,184,148,.2));border-radius:6px 6px 0 0;height:{{ r.hBack }}"></div>
+                    <div style="min-height:3px;background:linear-gradient(180deg,#E2B894,#C49573);height:{{ r.hInt }};border-radius:{{ r.rad }}"></div>
+                  </div>
+                </sc-for>
+              </div>
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none"><polyline points="{{ linePts }}" fill="none" stroke="#B4BEDB" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"></polyline></svg>
+            </div>
+            <div style="display:flex;gap:{{ chartGap }}"><sc-for list="{{ rows }}" as="r" hint-placeholder-count="6"><div style="flex:1;min-width:0;text-align:center;font-size:11px;color:rgba(235,240,255,.55);white-space:nowrap">{{ r.xl }}</div></sc-for></div>
           </div>
-          <div class="yaxis"><div style="top:-8px" id="yMax"></div><div style="top:calc(50% - 8px)" id="yHalf"></div><div style="bottom:-8px">0</div></div>
+          <div style="width:58px;flex:none;position:relative;height:180px;font-size:11.5px;color:rgba(235,240,255,.5)"><div style="position:absolute;top:-8px">{{ yMax }}</div><div style="position:absolute;top:calc(50% - 8px)">{{ yHalf }}</div><div style="position:absolute;bottom:-8px">0</div></div>
         </div>
-        <div class="tbl"><table>
-          <thead><tr><th>#</th><th>Month</th><th id="thRate">Profit (3%)</th><th>Money back</th><th>Total to pay</th><th class="sv">Saved so far</th></tr></thead>
-          <tbody id="sched"></tbody>
-          <tfoot id="schedFoot"></tfoot>
-        </table></div>
-      </section>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:13.5px;min-width:520px">
+            <thead><tr>
+              <th style="padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.12);font-size:12px;color:rgba(235,240,255,.55);font-weight:500;text-align:left">#</th>
+              <th style="padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.12);font-size:12px;color:rgba(235,240,255,.55);font-weight:500;text-align:left">Month</th>
+              <th style="padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.12);font-size:12px;color:rgba(235,240,255,.55);font-weight:500;text-align:right">Payment ({{ v.rate }})</th>
+              <th style="padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.12);font-size:12px;color:rgba(235,240,255,.55);font-weight:500;text-align:right">Money back</th>
+              <th style="padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.12);font-size:12px;color:rgba(235,240,255,.55);font-weight:500;text-align:right">Total to pay</th>
+              <th style="padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.12);font-size:12px;color:#B4BEDB;font-weight:500;text-align:right">Put aside so far</th>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+                <tr style="background:{{ r.bg }};font-weight:{{ r.fw }}">
+                  <td style="padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.07);color:rgba(235,240,255,.5)">{{ r.n }}</td>
+                  <td style="padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.07)">{{ r.month }}</td>
+                  <td style="padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.07);text-align:right">{{ r.pay }}</td>
+                  <td style="padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.07);text-align:right">{{ r.back }}</td>
+                  <td style="padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.07);text-align:right">{{ r.total }}</td>
+                  <td style="padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.07);text-align:right;color:#B4BEDB">{{ r.saved }}</td>
+                </tr>
+              </sc-for>
+            </tbody>
+            <tfoot><tr>
+              <td style="padding:10px 8px"></td>
+              <td style="padding:10px 8px;font-weight:600">Total</td>
+              <td style="padding:10px 8px;font-weight:600;text-align:right"><button type="button" onClick="{{ t.totalInterest }}" style="all:unset;cursor:pointer;text-decoration:underline dotted 1px;text-underline-offset:3px;text-decoration-color:rgba(235,240,255,.4)">{{ v.totalInterest }}</button></td>
+              <td style="padding:10px 8px;font-weight:600;text-align:right">{{ v.capital }}</td>
+              <td style="padding:10px 8px;font-weight:600;text-align:right"><button type="button" onClick="{{ t.totalPaid }}" style="all:unset;cursor:pointer;text-decoration:underline dotted 1px;text-underline-offset:3px;text-decoration-color:rgba(235,240,255,.4)">{{ v.totalPaid }}</button></td>
+              <td></td>
+            </tr></tfoot>
+          </table>
+        </div>
+      </div>
+    </sc-if>
+  </div>
 
-      <section class="chart-panel glass" aria-live="polite">
-        <div class="chart-head"><h2>Monthly check</h2><span class="hint">Do this once a month, after the money is in use</span></div>
-        <div class="mc-in">
-          <div class="row"><label for="mcMonth">This month's profit</label><div class="field"><span>Rs</span><input id="mcMonth" type="text" inputmode="numeric" value="1,020,000"></div><div class="hint">Example. Type your real month.</div></div>
-          <div class="row"><label for="mcNormal">Normal profit</label><div class="field"><span>Rs</span><input id="mcNormal" type="text" inputmode="numeric" value="900,692"></div><div class="hint">Average of the last 3 months.</div></div>
-          <div class="row"><label for="mcUsed">Investor money in use</label><div class="field"><span>Rs</span><input id="mcUsed" type="text" inputmode="numeric" value="1,000,000"></div><div class="hint">Only money already spent on stock or ads.</div></div>
-        </div>
-        <ol class="steps" id="mcSteps"></ol>
-        <div class="check"><i id="mcI"></i><div><b id="mcT"></b><span id="mcN"></span></div></div>
-      </section>
+  <div style="border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.12);overflow:hidden">
+    <button type="button" onClick="{{ tg.uses }}" style="all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:flex;align-items:center;gap:10px;padding:16px 20px"><span style="font-size:15px;font-weight:600">How we'll use the money</span><span style="font-size:13px;color:rgba(235,240,255,.5)">Each {{ per100 }} should earn {{ v.newRate }} a month</span><span style="margin-left:auto;font-size:20px;color:rgba(235,240,255,.6)">{{ ch.uses }}</span></button>
+    <sc-if value="{{ op.uses }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:0 20px 20px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 80px 80px 32px;gap:8px;font-size:12px;color:rgba(235,240,255,.5)"><span>What the money is for</span><span style="text-align:right">% of money</span><span style="text-align:right">How sure</span><span></span></div>
+        <sc-for list="{{ uses }}" as="u" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 80px 80px 32px;gap:8px;align-items:center">
+            <input type="text" placeholder="e.g. More stock" value="{{ u.name }}" onChange="{{ u.onName }}" style="font:500 14px inherit;color:#F5F7FF;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:8px 10px;min-width:0">
+            <input type="number" min="0" max="100" step="5" value="{{ u.pct }}" onChange="{{ u.onPct }}" style="font:500 14px inherit;color:#F5F7FF;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:8px 10px;text-align:right;min-width:0">
+            <input type="number" min="0" max="100" step="5" value="{{ u.sure }}" onChange="{{ u.onSure }}" style="font:500 14px inherit;color:#F5F7FF;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:8px 10px;text-align:right;min-width:0">
+            <button type="button" onClick="{{ u.remove }}" aria-label="Remove" style="height:32px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,.12);color:rgba(235,240,255,.6);cursor:pointer">×</button>
+          </div>
+        </sc-for>
+        <button type="button" onClick="{{ addUse }}" style="align-self:flex-start;background:rgba(255,255,255,.06);border:1px dashed rgba(255,255,255,.25);border-radius:10px;padding:7px 12px;font-size:13px;font-weight:500;cursor:pointer">+ Add a use</button>
+        <sc-if value="{{ usesWarn }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;gap:8px;align-items:flex-start;background:rgba(229,163,151,.12);border:1px solid rgba(229,163,151,.3);color:#E9B4A9;border-radius:12px;padding:9px 12px;font-size:12.5px"><i style="width:6px;height:6px;border-radius:50%;background:#E5A397;flex:none;margin-top:6px"></i><span>The % of money adds up to {{ usesTotal }}%. Make it 100%.</span></div>
+        </sc-if>
+        <div style="font-size:13px;color:rgba(235,240,255,.6);text-wrap:pretty">"How sure" = how well each use should earn compared with your money today (100% = just as well). Proven things get a high %, new things a low %. Overall: <button type="button" onClick="{{ t.sure }}" style="all:unset;cursor:pointer;color:#F5F7FF;text-decoration:underline dotted 1px;text-underline-offset:3px;text-decoration-color:rgba(235,240,255,.4)">{{ v.sure }}</button>, so each {{ per100 }} should earn <button type="button" onClick="{{ t.newRate }}" style="all:unset;cursor:pointer;color:#F5F7FF;text-decoration:underline dotted 1px;text-underline-offset:3px;text-decoration-color:rgba(235,240,255,.4)">{{ v.newRate }}</button> a month.</div>
+      </div>
+    </sc-if>
+  </div>
 
-      <section class="notes">
-        <h2>What is real and what is a guess</h2>
-        <div class="notes-list">
-          <div class="note"><span class="tag">Data</span><span>Net profit Jul Rs 930,809, Aug Rs 879,829, Sep Rs 891,440, from the live dashboard.</span></div>
-          <div class="note"><span class="tag">Your rule</span><span>3% of the money each month, first payment one month after receiving it, money returned with the last payment.</span></div>
-          <div class="note"><span class="tag guess">Guess</span><span>Office costs and salaries are Rs 0 until Anees's expense sheet is added.</span></div>
-          <div class="note"><span class="tag guess">Guess</span><span>Money tied up (Rs 4,000,000) is about 2 months of spending. Your real stock and COD figures will replace it.</span></div>
-          <div class="note"><span class="tag guess">Guess</span><span>The safety % for each use (85%, 65%, 30%) are starting points. The monthly check corrects them with real results.</span></div>
-          <div class="note"><span class="tag">Your rule</span><span>Investor payments may take at most the safe share of monthly profit (50% to start). The 3% is always paid on the original amount.</span></div>
-          <div class="note"><span class="tag none">Not covered</span><span>Tax on payments, and what happens if a month makes a loss. Put these in the written agreement.</span></div>
+  <div style="border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.12);overflow:hidden">
+    <button type="button" onClick="{{ tg.mc }}" style="all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:flex;align-items:center;gap:10px;padding:16px 20px"><span style="font-size:15px;font-weight:600">Monthly check</span><span style="font-size:13px;color:rgba(235,240,255,.5)">Once a month, after the money is in use</span><span style="margin-left:auto;font-size:20px;color:rgba(235,240,255,.6)">{{ ch.mc }}</span></button>
+    <sc-if value="{{ op.mc }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:0 20px 20px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px">
+          <div style="display:flex;flex-direction:column;gap:6px"><label style="font-size:13.5px;color:rgba(235,240,255,.72)">This month's profit</label><div style="display:flex;align-items:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:14px"><span style="padding-left:14px;color:rgba(235,240,255,.5);font-size:14px">{{ cur }}</span><input type="text" inputmode="numeric" value="{{ s.mcMonth }}" onChange="{{ on.mcMonth }}" onBlur="{{ bl.mcMonth }}" style="font:600 16px inherit;color:#F5F7FF;background:transparent;border:0;padding:10px 14px 10px 8px;width:100%;min-width:0"></div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><label style="font-size:13.5px;color:rgba(235,240,255,.72)">Normal profit (last 3 months)</label><div style="display:flex;align-items:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:14px"><span style="padding-left:14px;color:rgba(235,240,255,.5);font-size:14px">{{ cur }}</span><input type="text" inputmode="numeric" value="{{ mcNormalVal }}" onChange="{{ on.mcNormal }}" onBlur="{{ bl.mcNormal }}" style="font:600 16px inherit;color:#F5F7FF;background:transparent;border:0;padding:10px 14px 10px 8px;width:100%;min-width:0"></div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><label style="font-size:13.5px;color:rgba(235,240,255,.72)">Investor money in use</label><div style="display:flex;align-items:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:14px"><span style="padding-left:14px;color:rgba(235,240,255,.5);font-size:14px">{{ cur }}</span><input type="text" inputmode="numeric" value="{{ s.mcUsed }}" onChange="{{ on.mcUsed }}" onBlur="{{ bl.mcUsed }}" style="font:600 16px inherit;color:#F5F7FF;background:transparent;border:0;padding:10px 14px 10px 8px;width:100%;min-width:0"></div></div>
         </div>
-      </section>
-    </main>
+        <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:rgba(235,240,255,.72)">
+          <sc-for list="{{ mcSteps }}" as="m" hint-placeholder-count="4"><li><sc-for list="{{ m }}" as="x" hint-placeholder-count="1"><sc-if value="{{ x.isT }}" hint-placeholder-val="{{ true }}">{{ x.text }}</sc-if><sc-if value="{{ x.isN }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ x.go }}" style="all:unset;cursor:pointer;color:#F5F7FF;text-decoration:underline dotted 1px;text-underline-offset:3px;text-decoration-color:rgba(235,240,255,.4)">{{ x.val }}</button></sc-if></sc-for></li></sc-for>
+        </ol>
+        <div style="display:flex;gap:12px;align-items:flex-start;border-radius:16px;padding:12px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)">
+          <i style="width:9px;height:9px;border-radius:50%;flex:none;margin-top:6px;background:{{ mc.fg }}"></i>
+          <div><b style="display:block;font-size:14px;font-weight:600;color:{{ mc.fg }}">{{ mc.head }}</b><span style="font-size:12.5px;color:rgba(235,240,255,.6)">{{ mc.line }} <button type="button" onClick="{{ t.mcNew }}" style="all:unset;cursor:pointer;color:#F5F7FF;text-decoration:underline dotted 1px;text-underline-offset:3px;text-decoration-color:rgba(235,240,255,.4)">{{ v.mcNew }}</button> {{ mc.dir }}</span></div>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="border-radius:22px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);overflow:hidden">
+    <button type="button" onClick="{{ tg.notes }}" style="all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:flex;align-items:center;gap:10px;padding:16px 20px"><span style="font-size:15px;font-weight:600">What is real and what is a guess</span><span style="font-size:13px;color:rgba(235,240,255,.5)">{{ guessLine }}</span><span style="margin-left:auto;font-size:20px;color:rgba(235,240,255,.6)">{{ ch.notes }}</span></button>
+    <sc-if value="{{ op.notes }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:0 20px 20px;display:flex;flex-direction:column;gap:9px;font-size:13px;color:rgba(235,240,255,.72)">
+        <sc-for list="{{ notes }}" as="nt" hint-placeholder-count="6">
+          <div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;align-items:baseline"><span style="justify-self:start;font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;background:{{ nt.bg }};color:{{ nt.fg }}">{{ nt.tag }}</span><span>{{ nt.text }}</span></div>
+        </sc-for>
+        <div style="font-size:12px;color:rgba(235,240,255,.5)">Mark a number as an estimate in "Our business" and it shows up here.</div>
+      </div>
+    </sc-if>
   </div>
 </div>
 
-<div class="tp" id="tp" hidden>
-  <div class="tp-bg" id="tpBg"></div>
-  <div class="tp-card" id="tpCard" role="dialog" aria-modal="true" aria-labelledby="tpName" tabindex="-1">
-    <div class="tp-top"><button type="button" class="tp-btn" id="tpPrev">&larr; Back</button><button type="button" class="tp-btn" id="tpX" aria-label="Close">&times;</button></div>
-    <div id="tpBody"></div>
+<sc-if value="{{ s.drawer }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;z-index:40;display:flex;justify-content:flex-end;align-items:{{ sheet.align }}">
+    <div onClick="{{ closeDrawer }}" style="position:absolute;inset:0;background:rgba(5,7,12,.6)"></div>
+    <div role="dialog" aria-label="Our business" style="position:relative;width:min(460px,100%);height:{{ sheet.h }};max-height:{{ sheet.maxH }};border-radius:{{ sheet.r }};overflow-y:auto;background:#151a24;border-left:1px solid rgba(255,255,255,.12);border-top:1px solid rgba(255,255,255,.12);padding:16px 20px 32px;display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;align-items:center;gap:8px"><h3 style="margin:0;font-size:17px">Our business</h3><span style="font-size:12px;color:rgba(235,240,255,.5)">Saved on this device</span><button type="button" onClick="{{ closeDrawer }}" aria-label="Close" style="margin-left:auto;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:6px 12px;cursor:pointer">×</button></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:10px">
+        <div style="display:flex;flex-direction:column;gap:6px"><label style="font-size:13.5px;color:rgba(235,240,255,.72)">Business name</label><input type="text" placeholder="Optional" value="{{ s.name }}" onChange="{{ on.name }}" style="font:500 15px inherit;color:#F5F7FF;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:10px 14px;min-width:0"></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><label style="font-size:13.5px;color:rgba(235,240,255,.72)">Currency</label><input type="text" value="{{ s.cur }}" onChange="{{ on.cur }}" style="font:600 15px inherit;color:#F5F7FF;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:10px 14px;min-width:0"></div>
+      </div>
+      <sc-for list="{{ bizFields }}" as="f" hint-placeholder-count="4">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label style="font-size:13.5px;color:rgba(235,240,255,.72)">{{ f.label }}</label>
+          <div style="display:flex;align-items:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:14px"><span style="padding-left:14px;color:rgba(235,240,255,.5);font-size:14px">{{ cur }}</span><input type="text" inputmode="numeric" placeholder="0" value="{{ f.val }}" onChange="{{ f.on }}" onBlur="{{ f.blur }}" style="font:600 16px inherit;color:#F5F7FF;background:transparent;border:0;padding:10px 14px 10px 8px;width:100%;min-width:0"></div>
+          <div style="font-size:12px;color:rgba(235,240,255,.5)">{{ f.hint }}</div>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:rgba(235,240,255,.72);cursor:pointer"><input type="checkbox" checked="{{ f.est }}" onChange="{{ f.onEst }}">This is an estimate, not a real figure</label>
+          <sc-if value="{{ f.warn }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:8px;align-items:flex-start;background:rgba(229,163,151,.12);border:1px solid rgba(229,163,151,.3);color:#E9B4A9;border-radius:12px;padding:9px 12px;font-size:12.5px"><i style="width:6px;height:6px;border-radius:50%;background:#E5A397;flex:none;margin-top:6px"></i><span>{{ f.warnText }}</span></div></sc-if>
+        </div>
+      </sc-for>
+      <div style="font-size:13px;color:rgba(235,240,255,.72);display:flex;flex-direction:column;gap:2px">
+        <span>Each {{ per100 }} in the business earns <button type="button" onClick="{{ t.earn }}" style="all:unset;cursor:pointer;color:#F5F7FF;font-weight:600;text-decoration:underline dotted 1px;text-underline-offset:3px;text-decoration-color:rgba(235,240,255,.4)">{{ v.earn }}</button> a month.</span>
+        <sc-if value="{{ hasSpend }}" hint-placeholder-val="{{ false }}"><span>Money working ≈ <button type="button" onClick="{{ t.spendMonths }}" style="all:unset;cursor:pointer;color:#F5F7FF;font-weight:600;text-decoration:underline dotted 1px;text-underline-offset:3px;text-decoration-color:rgba(235,240,255,.4)">{{ v.spendMonths }}</button> of spending.</span></sc-if>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><label style="font-size:13.5px;color:rgba(235,240,255,.72)">Max % of profit for all investors</label><span style="font-size:17px;font-weight:600">{{ v.share }}</span></div>
+        <div style="position:relative;height:28px;display:flex;align-items:center">
+          <div style="position:absolute;left:0;right:0;height:6px;border-radius:3px;background:rgba(255,255,255,.12);box-shadow:inset 0 1px 2px rgba(0,0,0,.4)"></div>
+          <div style="position:absolute;left:0;height:6px;border-radius:3px;background:linear-gradient(90deg,#8590B5,#C3CAE0);width:{{ shareFill }}"></div>
+          <input type="range" aria-label="Max % of profit for investors" min="10" max="100" step="5" value="{{ s.share }}" onChange="{{ on.share }}">
+        </div>
+        <div style="font-size:12px;color:rgba(235,240,255,.5)">Investors may take up to {{ v.pot }} a month. Lower is safer: 30–50% leaves room for a bad month.</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button type="button" onClick="{{ closeDrawer }}" style="background:#B4BEDB;color:#0D1017;border:0;border-radius:10px;padding:9px 16px;font-weight:600;cursor:pointer">Done</button>
+        <button type="button" onClick="{{ resetExample }}" style="background:transparent;border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:9px 14px;font-size:13px;cursor:pointer;color:rgba(235,240,255,.72)">Load example numbers</button>
+      </div>
+    </div>
   </div>
-</div>
-<script>
-/*calc*/
-function calc(i){
-  var interest = i.capital * i.rate / 100;     // fixed monthly profit to investor
-  var rows = [], save = i.capital / i.months;
-  for (var k = 1; k <= i.months; k++){
-    var back = k === i.months ? i.capital : 0;
-    rows.push({n:k, ym: addMonths(i.start, k), interest:interest, back:back, pay:interest + back, saved:save * k});
+</sc-if>
+
+<sc-if value="{{ hasTp }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;z-index:50;display:flex;justify-content:flex-end;align-items:{{ sheet.align }}">
+    <div onClick="{{ closeTp }}" style="position:absolute;inset:0;background:rgba(5,7,12,.6)"></div>
+    <div role="dialog" aria-label="{{ tp.name }}" style="position:relative;width:min(440px,100%);height:{{ sheet.h }};max-height:{{ sheet.maxH }};border-radius:{{ sheet.r }};overflow-y:auto;background:#151a24;border-left:1px solid rgba(255,255,255,.12);border-top:1px solid rgba(255,255,255,.12);padding:16px 20px 32px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <sc-if value="{{ tp.canBack }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ backTp }}" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:6px 12px;cursor:pointer">← Back</button></sc-if>
+        <button type="button" onClick="{{ closeTp }}" aria-label="Close" style="margin-left:auto;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:6px 12px;cursor:pointer">×</button>
+      </div>
+      <span style="align-self:flex-start;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:99px;background:{{ tp.tagBg }};color:{{ tp.tagFg }}">{{ tp.tag }}</span>
+      <h3 style="margin:2px 0 0;font-size:17px">{{ tp.name }}</h3>
+      <div style="font-size:28px;font-weight:700;letter-spacing:-.02em">{{ tp.val }}</div>
+      <p style="margin:0;color:rgba(235,240,255,.72);font-size:14.5px;line-height:1.55">{{ tp.what }}</p>
+      <sc-if value="{{ tp.isCalc }}" hint-placeholder-val="{{ false }}">
+        <h4 style="margin:10px 0 0;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:rgba(235,240,255,.5);font-weight:600">How it is worked out</h4>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px">
+          <sc-for list="{{ tp.parts }}" as="p" hint-placeholder-count="3">
+            <sc-if value="{{ p.isOp }}" hint-placeholder-val="{{ false }}"><span style="color:rgba(235,240,255,.6);font-weight:600">{{ p.text }}</span></sc-if>
+            <sc-if value="{{ p.isChip }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ p.go }}" style="display:inline-flex;flex-direction:column;align-items:flex-start;gap:1px;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);cursor:pointer;text-align:left;max-width:100%"><b style="font-size:14.5px">{{ p.val }}</b><small style="font-size:11.5px;color:rgba(235,240,255,.6)">{{ p.name }}</small></button></sc-if>
+          </sc-for>
+          <b style="font-size:16px">{{ tp.val }}</b>
+        </div>
+        <p style="margin:0;font-size:12.5px;color:rgba(235,240,255,.5)">Tap any part to see where it comes from.</p>
+        <h4 style="margin:10px 0 0;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:rgba(235,240,255,.5);font-weight:600">How sure is it?</h4>
+        <sc-if value="{{ tp.hasGuesses }}" hint-placeholder-val="{{ false }}">
+          <p style="margin:0;color:rgba(235,240,255,.72);font-size:14.5px">{{ tp.guessLine }}</p>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <sc-for list="{{ tp.guesses }}" as="p" hint-placeholder-count="2"><button type="button" onClick="{{ p.go }}" style="display:inline-flex;flex-direction:column;align-items:flex-start;gap:1px;padding:6px 10px;border-radius:10px;background:rgba(220,192,138,.1);border:1px solid rgba(220,192,138,.3);cursor:pointer;text-align:left;max-width:100%"><b style="font-size:14.5px">{{ p.val }}</b><small style="font-size:11.5px;color:rgba(235,240,255,.6)">{{ p.name }}</small></button></sc-for>
+          </div>
+          <p style="margin:0;font-size:12.5px;color:rgba(235,240,255,.5)">Everything else comes from real figures or your choices.</p>
+        </sc-if>
+        <sc-if value="{{ tp.noGuesses }}" hint-placeholder-val="{{ false }}"><p style="margin:0;color:rgba(235,240,255,.72);font-size:14.5px">Exact for these settings. It uses only real figures and your choices.</p></sc-if>
+      </sc-if>
+      <sc-if value="{{ tp.isLeaf }}" hint-placeholder-val="{{ false }}">
+        <h4 style="margin:10px 0 0;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:rgba(235,240,255,.5);font-weight:600">Where it comes from</h4>
+        <p style="margin:0;color:rgba(235,240,255,.72);font-size:14.5px;line-height:1.55">{{ tp.src }}</p>
+        <h4 style="margin:10px 0 0;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:rgba(235,240,255,.5);font-weight:600">How sure is it?</h4>
+        <p style="margin:0;color:rgba(235,240,255,.72);font-size:14.5px;line-height:1.55">{{ tp.sure }}</p>
+      </sc-if>
+      <sc-if value="{{ tp.hasMeans }}" hint-placeholder-val="{{ false }}">
+        <h4 style="margin:10px 0 0;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:rgba(235,240,255,.5);font-weight:600">What it means now</h4>
+        <p style="margin:0;color:rgba(235,240,255,.72);font-size:14.5px;line-height:1.55"><sc-for list="{{ tp.means }}" as="x" hint-placeholder-count="1"><sc-if value="{{ x.isT }}" hint-placeholder-val="{{ true }}">{{ x.text }}</sc-if><sc-if value="{{ x.isN }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ x.go }}" style="all:unset;cursor:pointer;color:#F5F7FF;text-decoration:underline dotted 1px;text-underline-offset:3px;text-decoration-color:rgba(235,240,255,.4)">{{ x.val }}</button></sc-if></sc-for></p>
+        <h4 style="margin:10px 0 0;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:rgba(235,240,255,.5);font-weight:600">What to do</h4>
+        <p style="margin:0;color:rgba(235,240,255,.72);font-size:14.5px;line-height:1.55"><sc-for list="{{ tp.todo }}" as="x" hint-placeholder-count="1"><sc-if value="{{ x.isT }}" hint-placeholder-val="{{ true }}">{{ x.text }}</sc-if><sc-if value="{{ x.isN }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ x.go }}" style="all:unset;cursor:pointer;color:#F5F7FF;text-decoration:underline dotted 1px;text-underline-offset:3px;text-decoration-color:rgba(235,240,255,.4)">{{ x.val }}</button></sc-if></sc-for></p>
+      </sc-if>
+      <sc-if value="{{ tp.hasUsed }}" hint-placeholder-val="{{ false }}">
+        <h4 style="margin:10px 0 0;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:rgba(235,240,255,.5);font-weight:600">Used to work out</h4>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <sc-for list="{{ tp.usedIn }}" as="p" hint-placeholder-count="2"><button type="button" onClick="{{ p.go }}" style="display:inline-flex;flex-direction:column;align-items:flex-start;gap:1px;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);cursor:pointer;text-align:left;max-width:100%"><b style="font-size:14.5px">{{ p.val }}</b><small style="font-size:11.5px;color:rgba(235,240,255,.6)">{{ p.name }}</small></button></sc-for>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;tightAt&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:50,&quot;max&quot;:100,&quot;step&quot;:5,&quot;unit&quot;:&quot;%&quot;,&quot;default&quot;:80,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Rules&quot;}}">
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const num=v=>{const n=parseFloat(String(v??'').replace(/[^0-9.\-]/g,''));return isFinite(n)?n:0;};
+const fmtN=n=>Math.round(Math.abs(n)).toLocaleString('en-US');
+let CUR='Rs';
+const rs=n=>(n<0?'−':'')+CUR+' '+fmtN(n);
+const sg=n=>(n>=0?'+':'−')+CUR+' '+fmtN(n);
+const short=n=>{const a=Math.abs(n);return CUR+' '+(a>=1e6?(+(a/1e6).toFixed(2))+'M':a>=1e3?Math.round(a/1e3)+'k':Math.round(a));};
+const addMonths=(ym,k)=>{const p=String(ym||'2027-01').split('-'),y=+p[0],m=+p[1]-1+k;return (y+Math.floor(m/12))+'-'+String(m%12+1).padStart(2,'0');};
+const mname=ym=>{const p=String(ym).split('-');return (MON[+p[1]-1]||'')+' '+p[0];};
+const GOOD='#8FD4B6',WARN='#DCC08A',BAD='#E5A397',BLUE='#B4BEDB';
+const BGS={[GOOD]:'rgba(143,212,182,.12)',[WARN]:'rgba(220,192,138,.14)',[BAD]:'rgba(229,163,151,.14)',[BLUE]:'rgba(180,190,219,.14)'};
+const TAGS={data:['Real figure','rgba(143,212,182,.16)','#8FD4B6'],choice:['Your choice','rgba(180,190,219,.18)','#B4BEDB'],guess:['Estimate','rgba(220,192,138,.16)','#DCC08A']};
+const TAGTXT={data:'A real figure from your records. You can trust it.',choice:'Exact, because you set it.',guess:'An estimate, not measured yet. Every number that uses it is rough. Replace it with a real figure when you can.'};
+const OPS={mul:'×',div:'÷',sub:'−',add:'+'};
+const KEY='raisePlanner.v2';
+const EXAMPLE={name:'',cur:'Rs',capital:2000000,rate:3,months:6,start:'2027-01',profit:'900,000',costs:'0',tied:'4,000,000',spend:'2,000,000',share:50,
+  est:{profit:false,costs:true,tied:true,spend:false},
+  uses:[{name:'More stock of best sellers',pct:50,sure:85},{name:'More marketing for the same products',pct:30,sure:65},{name:'Something new',pct:20,sure:30}],
+  mcMonth:'1,020,000',mcNormal:null,mcUsed:'1,000,000',touched:false};
+const SAVE_KEYS=Object.keys(EXAMPLE);
+function fmtV(n,val){const v=val??n.v;
+  if(n.unit==='rs')return rs(v);
+  if(n.unit==='pct')return (+(+v).toFixed(Math.abs(v)<10?2:1))+'%';
+  if(n.unit==='n')return v+(v===1?' month':' months');
+  if(n.unit==='mo')return (+(+v).toFixed(1))+' months';
+  if(n.unit==='x')return (+(+v).toFixed(1))+' times';
+  if(n.unit==='date')return mname(v);
+  return String(v);}
+const pc=x=>Math.max(0,Math.min(100,x||0))+'%';
+const ANIM=['interest','save','pot','extra','gain','limit','keep','totalGain'];
+
+class Component extends DCLogic {
+  state=(()=>{let saved={};try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){}
+    return {...JSON.parse(JSON.stringify(EXAMPLE)),...saved,open:{},drawer:false,stack:[],w:typeof window!=='undefined'?window.innerWidth:1200};})();
+  cur={};tgt={};
+  componentDidMount(){this.onResize=()=>this.setState({w:window.innerWidth});window.addEventListener('resize',this.onResize);
+    this.reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;}
+  componentWillUnmount(){window.removeEventListener('resize',this.onResize);cancelAnimationFrame(this.raf);}
+  componentDidUpdate(){
+    const o={};SAVE_KEYS.forEach(k=>o[k]=this.state[k]);const j=JSON.stringify(o);
+    if(j!==this.lastSaved){this.lastSaved=j;try{localStorage.setItem(KEY,j);}catch(e){}}
+    this.kick();
   }
-  var base = i.profit - i.costs;
-  var extra = i.capital * i.extraPct / 100;
-  var totalInterest = interest * i.months;
-  return {interest:interest, rows:rows, totalInterest:totalInterest, totalPaid:totalInterest + i.capital,
-    base:base, extra:extra, keep:base + extra - interest, gain:extra - interest,
-    lastPay:interest + i.capital, save:save};
-}
-function plan(i, r, sharePct){
-  var s = sharePct / 100, rate = i.rate / 100, monthly = r.base + r.extra; // profit once the money is working
-  var pot = Math.max(0, r.base) * s;                       // safe pot, from profit we already make
-  return {pot:pot,
-    maxReturns: rate > 0 ? pot / rate : Infinity,           // rate x raised <= pot
-    maxRepay: pot / (rate + 1 / i.months),                  // rate + repayment saving <= pot
-    fairRate: i.extraPct * s,                               // % of capital, = share of what the money earns
-    usedPct: r.base > 0 ? r.interest / r.base * 100 : Infinity,
-    giveAwayPct: i.extraPct > 0 ? i.rate / i.extraPct * 100 : Infinity,
-    oblig: r.interest + r.save, obligPct: monthly > 0 ? (r.interest + r.save) / monthly * 100 : Infinity};
-}
-function earnRate(profit, costs, tied){ return tied > 0 ? (profit - costs) / tied * 100 : 0; }
-function blend(uses){ // weighted safety %, weights = % of money
-  var w = 0, t = 0; uses.forEach(function(u){ w += Math.max(0, u.pct); t += Math.max(0, u.pct) * u.safe; });
-  return {safe: w > 0 ? t / w : 0, total: w};
-}
-function monthly(m){ // m: month, normal, used, normalRate, oldSafe, rate
-  var extra = m.month - m.normal, earned = m.used > 0 ? extra / m.used * 100 : 0;
-  var real = m.normalRate > 0 ? earned / m.normalRate * 100 : 0;
-  var nu = Math.max(0, Math.min(100, (m.oldSafe + real) / 2));
-  return {extra:extra, earned:earned, real:real, newSafe:nu, belowCost: earned < m.rate};
-}
-function addMonths(ym, k){ // ym = "YYYY-MM"
-  var p = String(ym || '2027-01').split('-'), y = +p[0], m = +p[1] - 1 + k;
-  return (y + Math.floor(m / 12)) + '-' + String(m % 12 + 1).padStart(2, '0');
-}
-/*end*/
-
-var $ = function(id){return document.getElementById(id)};
-var num = function(v){var n = parseFloat(String(v).replace(/[^0-9.\-]/g,'')); return isFinite(n) ? n : 0};
-var CUR = 'Rs';
-var fmtN = function(n){return Math.round(Math.abs(n)).toLocaleString('en-US')};
-var rs = function(n){return (n < 0 ? '−' : '') + CUR + ' ' + fmtN(n)};
-var sg = function(n){return (n >= 0 ? '+' : '−') + CUR + ' ' + fmtN(n)};
-var short = function(n){var a = Math.abs(n); return CUR + ' ' + (a >= 1e6 ? (+(a/1e6).toFixed(2)) + 'M' : a >= 1e3 ? Math.round(a/1e3) + 'k' : Math.round(a))};
-var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-var mname = function(ym){var p = ym.split('-'); return MON[+p[1]-1] + ' ' + p[0]};
-var PROFIT = {'Jul':930809,'Aug':879829,'Sep':891440,'Jul–Sep average':900692};
-var LETTERS = ['A','B','C'];
-var COUNT = 3;
-var GOOD0 = '#8FD4B6', BAD0 = '#E5A397';
-var esc = function(t){ return String(t).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
-var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-var state = {
-  active: 0, profit: '900,692', costs: '0', share: 50, tied: '4,000,000',
-  uses: [{name:'More stock of best sellers', pct:50, safe:85}, {name:'More ads for the same products', pct:30, safe:65}, {name:'A new product', pct:20, safe:30}],
-  mc: {mcMonth:'1,020,000', mcNormal:'900,692', mcUsed:'1,000,000'},
-  sc: [
-    {capital:1000000, rate:3, months:6, start:'2027-01', extra:10},
-    {capital:2000000, rate:3, months:6, start:'2027-01', extra:5},
-    {capital:3000000, rate:2.5, months:12, start:'2027-01', extra:4}
-  ]
-};
-
-var SLIDERS = [
-  {k:'capital', label:"Investor's money", min:100000, max:10000000, step:50000, text:function(d){return rs(d.capital)}},
-  {k:'rate', label:'We pay them, per month', min:0.5, max:10, step:0.25, text:function(d){return d.rate + '%'}, hint:function(){return T('interest') + ' a month'}},
-  {k:'months', label:'Number of payments', min:1, max:36, step:1, text:function(d){return d.months + (d.months === 1 ? ' month' : ' months')}, hint:function(){return 'Money goes back in ' + T('lastMonth')}}
-];
-
-var verdict = function(good, ok, fair){
-  return good && fair === false ? {t:'Rate too high', fg:'#DCC08A', bg:'rgba(220,192,138,.14)', glow:'rgba(220,192,138,.14)'}
-    : !good ? {t:'Loses money', fg:'#E5A397', bg:'rgba(229,163,151,.14)', glow:'rgba(229,163,151,.15)'}
-    : ok ? {t:'Good deal', fg:'#8FD4B6', bg:'rgba(143,212,182,.12)', glow:'rgba(143,212,182,.16)'}
-    : {t:'Tight on cash', fg:'#DCC08A', bg:'rgba(220,192,138,.14)', glow:'rgba(220,192,138,.14)'};
-};
-var inputs = function(d){return {capital:d.capital, rate:d.rate, months:Math.max(1, d.months), start:d.start || '2027-01',
-  profit:num(state.profit), costs:num(state.costs), extraPct:newRate()}};
-var baseRate = function(){ return earnRate(num(state.profit), num(state.costs), num(state.tied)); };
-var newRate = function(){ return baseRate() * blend(state.uses).safe / 100; };
-var SPEND = 1987013; // Jul-Sep average monthly spending: stock, ads, courier, tax, returns, Shopify
-
-/* ---- trace: every number knows how it is made ----
-   L() = a starting number (Data / Your choice / Guess). C() = a number worked out from others.
-   C() computes the value from its parts, so the sum shown in the panel is the sum that made the number. */
-var G = {};
-var TAGS = {data:'Data', choice:'Your choice', guess:'Guess'};
-var TAGTXT = {data:'Data: a real number from your records.', choice:'Your choice: exact, because you set it.',
-  guess:'Guess: not measured yet, so every number that uses it is rough.'};
-function fmtV(n){
-  var v = n.v;
-  if (n.unit === 'rs') return rs(v);
-  if (n.unit === 'pct') return (n.ins ? +v.toFixed(Math.abs(v) < 10 ? 2 : 1) : +(+v).toFixed(2)) + '%';
-  if (n.unit === 'n') return v + (v === 1 ? ' month' : ' months');
-  if (n.unit === 'mo') return +v.toFixed(1) + ' months';
-  if (n.unit === 'x') return +v.toFixed(1) + ' times';
-  if (n.unit === 'date') return mname(v);
-  return '';
-}
-function T(id, txt){ return '<button type="button" class="tn" data-n="' + id + '">' + esc(txt == null ? fmtV(G[id]) : txt) + '</button>'; }
-function L(id, unit, v, tag, name, what, src, input){ G[id] = {id:id, unit:unit, v:v, tag:tag, name:name, what:what, src:src, input:input}; }
-function C(id, unit, op, ins, name, what, c){
-  var a = ins.map(function(k){ var m = G[k]; return m.unit === 'pct' ? m.v / 100 : m.v; }), v, w = 0, t = 0;
-  if (op === 'mul') v = a.reduce(function(x, y){ return x * y; }, 1);
-  else if (op === 'div') v = a[1] ? a[0] / a[1] : 0;
-  else if (op === 'sub') v = a[0] - a[1];
-  else if (op === 'add') v = a[0] + a[1];
-  else if (op === 'avg') v = Math.max(0, Math.min(1, (a[0] + a[1]) / 2));
-  else if (op === 'mix'){ for (var k = 0; k < a.length; k += 2){ w += Math.max(0, a[k]); t += Math.max(0, a[k]) * a[k + 1]; } v = w ? t / w : 0; }
-  else if (op === 'mulc') v = a[0] * c;
-  else if (op === 'addm') v = addMonths(G[ins[0]].v, ins[1] ? G[ins[1]].v : c);
-  G[id] = {id:id, unit:unit, op:op, ins:ins, name:name, what:what, c:c, v:unit === 'pct' ? v * 100 : v};
-}
-function leaves(id, seen){
-  seen = seen || {}; var n = G[id], out = [];
-  if (!n || seen[id]) return out; seen[id] = 1;
-  if (!n.ins) return n.tag ? [n] : [];
-  n.ins.forEach(function(k){ out = out.concat(leaves(k, seen)); });
-  return out;
-}
-function buildGraph(i){
-  G = {};
-  var chipK = Object.keys(PROFIT).filter(function(k){ return PROFIT[k] === i.profit; })[0];
-  L('capital', 'rs', i.capital, 'choice', "Investor's money", 'The money the investor gives us.', 'You set it with the slider in the deal terms.', 'sl-capital');
-  L('rate', 'pct', i.rate, 'choice', 'Monthly rate we pay', "The % of the investor's money we pay them each month.", 'You set it with the slider. It is the deal we offer the investor.', 'sl-rate');
-  L('months', 'n', i.months, 'choice', 'Number of payments', 'How many monthly payments come before we return the money.', 'You set it with the slider.', 'sl-months');
-  L('start', 'date', i.start, 'choice', 'Month the money arrives', 'The month the investor gives us the money. The first payment is one month later.', 'You set it in the deal terms.', 'start');
-  L('profit', 'rs', i.profit, chipK ? 'data' : 'choice', 'Net profit per month', 'What the business makes in a month after product cost, courier, tax, ads and Shopify.',
-    !chipK ? 'You typed it in.' : chipK === 'Jul–Sep average' ? 'The average of July (Rs 930,809), August (Rs 879,829) and September (Rs 891,440), from the live dashboard.' : 'Our ' + chipK + ' profit, from the live dashboard.', 'profit');
-  L('costs', 'rs', i.costs, i.costs ? 'choice' : 'guess', 'Office costs and salaries', 'Monthly costs that are not on the dashboard yet.',
-    i.costs ? 'You typed it in.' : 'Not counted yet, so it is Rs 0 for now. Anees will share the expense sheet. Until then, real profit is lower than shown.', 'costs');
-  L('tied', 'rs', num(state.tied), 'guess', 'Money tied up in the business', 'All the money stuck in the business right now: stock and unpaid COD.',
-    'An estimate. The real number is stock in the warehouse + stock on the way + ' + T('w_cod', 'COD') + ' that FulfillKaro has not paid us yet.', 'tied');
-  L('share', 'pct', state.share, 'choice', 'Safe share of profit', 'The most of our monthly profit that all investor payments together may take.',
-    'Your rule, set with the slider. 50% was the careful start: it keeps the other half for office costs that are not counted yet, bad months, and growth.', 'share');
-  L('spend', 'rs', SPEND, 'data', 'Monthly spending', 'What the business spends in a month: stock, ads, courier, tax, returns and Shopify.', 'The July to September average, from the live dashboard.');
-  var mix = [];
-  state.uses.forEach(function(u, k){
-    L('useP' + k, 'pct', u.pct, 'choice', 'Money for: ' + u.name, "How much of the investor's money goes to this use.", 'You set it in "How we will use the money".', 'useP' + k);
-    L('useS' + k, 'pct', u.safe, 'guess', 'Safety %: ' + u.name, 'How well this use should earn, compared with our current money. Proven products get a high %, new things a low %.',
-      'A starting point. The monthly check corrects it with real results.', 'useS' + k);
-    mix.push('useP' + k, 'useS' + k);
-  });
-  [['mcMonth', "This month's profit"], ['mcNormal', 'Normal profit'], ['mcUsed', 'Investor money in use']].forEach(function(m){
-    L(m[0], 'rs', num(state.mc[m[0]]), 'choice', m[1], m[1] + ', typed in the monthly check.', 'You type it in the monthly check. The starting number is only an example.', m[0]);
-  });
-  C('interest', 'rs', 'mul', ['capital', 'rate'], 'Monthly payment to the investor');
-  C('save', 'rs', 'div', ['capital', 'months'], 'Money we put aside each month');
-  C('base', 'rs', 'sub', ['profit', 'costs'], 'Our profit now', 'What we make each month after all costs, before the deal.');
-  C('earn', 'pct', 'div', ['base', 'tied'], 'Our earning rate');
-  C('blendSafe', 'pct', 'mix', mix, 'Safety % for the new money');
-  C('newRate', 'pct', 'mul', ['earn', 'blendSafe'], 'What new money earns', 'How much profit each Rs 100 of investor money should make in a month.');
-  C('extra', 'rs', 'mul', ['capital', 'newRate'], 'Extra profit from the money');
-  C('gain', 'rs', 'sub', ['extra', 'interest'], 'What we gain each month');
-  C('totalGain', 'rs', 'mul', ['gain', 'months'], 'What we gain over the whole deal');
-  C('totalInterest', 'rs', 'mul', ['interest', 'months'], 'All monthly payments together', 'Everything we pay the investor as profit, before we return their money.');
-  C('totalPaid', 'rs', 'add', ['totalInterest', 'capital'], 'Everything the investor gets');
-  C('invReturn', 'pct', 'div', ['totalInterest', 'capital'], "The investor's return", 'How much the investor earns on their money over the whole deal.');
-  C('lastPay', 'rs', 'add', ['interest', 'capital'], 'The last payment', "The last month: the monthly payment plus all of the investor's money back.");
-  C('withMoney', 'rs', 'add', ['base', 'extra'], 'Our profit with the new money', "What we make each month once the investor's money is working.");
-  C('keep', 'rs', 'sub', ['withMoney', 'interest'], 'What we keep each month');
-  C('firstMonth', 'date', 'addm', ['start'], 'First payment', 'The month we pay the investor for the first time.', 1);
-  C('lastMonth', 'date', 'addm', ['start', 'months'], 'Month we return the money');
-  C('pot', 'rs', 'mul', ['base', 'share'], 'Money for all investors each month', 'The most all investor payments together may take each month.');
-  C('maxReturns', 'rs', 'div', ['pot', 'rate'], 'Most we can raise (payments only)');
-  C('savePct', 'pct', 'div', ['save', 'capital'], 'Part we put aside each month', "The part of the investor's money we put aside each month, so it is ready at the end.");
-  C('costPct', 'pct', 'add', ['rate', 'savePct'], 'Monthly cost of the money', 'What each Rs 100 we raise costs us each month: the payment plus the part we put aside.');
-  C('maxRepay', 'rs', 'div', ['pot', 'costPct'], 'Most we can raise and still repay');
-  C('fairRate', 'pct', 'mul', ['newRate', 'share'], 'Highest fair rate');
-  C('usedPct', 'pct', 'div', ['interest', 'base'], 'Part of our profit the payment takes');
-  C('giveAway', 'pct', 'div', ['rate', 'newRate'], 'Part of the earnings the investor gets');
-  C('oblig', 'rs', 'add', ['interest', 'save'], 'Paying plus saving each month', 'What leaves our profit each month: the payment plus the money we put aside.');
-  C('obligPct', 'pct', 'div', ['oblig', 'withMoney'], 'Part of our profit for paying and saving');
-  C('times', 'x', 'div', ['extra', 'interest'], 'Earnings compared with the payment', 'How many times the monthly payment the money earns us.');
-  C('spendMonths', 'mo', 'div', ['tied', 'spend'], 'Months of spending tied up', 'How many months of spending the money tied up is worth.');
-  C('mcExtra', 'rs', 'sub', ['mcMonth', 'mcNormal'], 'Extra profit this month', 'The profit the new money added this month.');
-  C('mcEarned', 'pct', 'div', ['mcExtra', 'mcUsed'], 'What the new money earned', 'Profit for every Rs 100 of investor money this month.');
-  C('mcReal', 'pct', 'div', ['mcEarned', 'earn'], 'Real safety %', 'How well the new money earned, compared with our current money.');
-  C('mcNew', 'pct', 'avg', ['blendSafe', 'mcReal'], 'New safety % for next time', 'Halfway between the old safety % and the real one, so one odd month does not swing it too much.');
-  for (var k = 1; k <= i.months; k++) C('saved' + k, 'rs', 'mulc', ['save'], 'Put aside after ' + k + (k === 1 ? ' month' : ' months'), "Money put aside so far, to return the investor's money.", k);
-  [['w_data', 'Data', 'A real number from your records, such as the live dashboard. You can trust it.'],
-   ['w_choice', 'Your choice', 'A number you decide, such as the deal terms or the safe share. It is exact, because you set it.'],
-   ['w_guess', 'Guess', 'A number we have not measured yet. Every result that uses it is rough. Replace it with a real number when you can.'],
-   ['w_cod', 'COD (cash on delivery)', 'The customer pays the courier when the order arrives. FulfillKaro collects this money and pays it to us later.']
-  ].forEach(function(w){ G[w[0]] = {id:w[0], unit:'word', name:w[1], what:w[2]}; });
-}
-
-/* ---- the panel ---- */
-var tpStack = [], tpLast = null;
-function chipH(k){ var m = G[k]; return '<button type="button" class="tp-chip" data-n="' + k + '"><b>' + esc(fmtV(m)) + '</b><small>' + esc(m.name) + '</small></button>'; }
-function sumH(n){
-  var o = function(t){ return '<span class="tp-op">' + t + '</span>'; }, c = n.ins.map(chipH), t, parts = [], tot = 0;
-  if (n.op === 'mix'){
-    for (var k = 0; k < c.length; k += 2){ parts.push(c[k] + o('×') + c[k + 1]); tot += Math.max(0, G[n.ins[k]].v); }
-    t = parts.join(o('+'));
-    if (Math.round(tot) !== 100) t = o('(') + t + o(') ÷ ' + Math.round(tot) + '%');
+  kick(){
+    if(this.raf||this.reduce)return;
+    const step=()=>{this.raf=null;let moving=false,changed=false;
+      ANIM.forEach(k=>{const tg=this.tgt[k];if(tg==null)return;const c=this.cur[k]??tg,d=tg-c;
+        if(Math.abs(d)>Math.max(0.5,Math.abs(tg)*1e-4)){this.cur[k]=c+d*0.2;moving=changed=true;}else if(c!==tg){this.cur[k]=tg;changed=true;}});
+      if(moving)this.raf=requestAnimationFrame(step);
+      if(changed)this.forceUpdate();};
+    this.raf=requestAnimationFrame(step);
   }
-  else if (n.op === 'avg') t = o('(') + c[0] + o('+') + c[1] + o(') ÷ 2');
-  else if (n.op === 'mulc') t = c[0] + o('× ' + n.c);
-  else if (n.op === 'addm') t = c[0] + o('+') + (c[1] || o(n.c + ' month'));
-  else t = c.join(o({mul:'×', div:'÷', sub:'−', add:'+'}[n.op]));
-  return t + o('=') + '<b class="tp-res">' + esc(fmtV(n)) + '</b>';
-}
-function drawTrace(){
-  var id = tpStack[tpStack.length - 1], n = G[id], h = [];
-  $('tpPrev').hidden = tpStack.length < 2;
-  if (n.unit === 'word'){
-    h.push('<h3 id="tpName">' + esc(n.name) + '</h3><p>' + n.what + '</p>');
-  } else {
-    h.push(n.tag ? '<button type="button" class="tp-tag t-' + n.tag + '" data-n="w_' + n.tag + '">' + TAGS[n.tag] + '</button>' : '<span class="tp-tag">Worked out</span>');
-    h.push('<h3 id="tpName">' + esc(n.name) + '</h3><div class="tp-val tnum">' + esc(fmtV(n)) + '</div>');
-    if (n.what) h.push('<p>' + n.what + '</p>');
-    if (n.ins){
-      var gs = leaves(id).filter(function(m){ return m.tag === 'guess'; });
-      h.push('<h4>How it is worked out</h4><div class="tp-sum">' + sumH(n) + '</div><p class="tp-hint">Tap any part to see where it comes from.</p>');
-      h.push('<h4>How sure is it?</h4>' + (gs.length
-        ? '<p>Rough. It depends on ' + (gs.length === 1 ? 'this guess' : 'these ' + gs.length + ' guesses') + ':</p><div class="tp-sum">' + gs.map(function(m){ return chipH(m.id); }).join('') + '</div><p class="tp-hint">Everything else comes from data or your choices.</p>'
-        : '<p>Exact for these settings. It uses only data and your choices.</p>'));
-    } else {
-      h.push('<h4>Where it comes from</h4><p>' + n.src + '</p><h4>How sure is it?</h4><p>' + TAGTXT[n.tag] + '</p>');
-      if (n.input) h.push('<button type="button" class="tp-go" data-go="' + n.input + '">Change this number</button>');
+
+  graph(){
+    const s=this.state,G={},est=s.est||{};
+    CUR=(s.cur||'').trim()||'$';
+    const L=(id,unit,v,tag,name,what,src)=>{G[id]={id,unit,v,tag,name,what,src};};
+    const C=(id,unit,op,ins,name,what,c)=>{
+      const a=ins.map(k=>G[k].unit==='pct'?G[k].v/100:G[k].v);let v;
+      if(op==='mul')v=a.reduce((x,y)=>x*y,1);
+      else if(op==='div')v=a[1]?a[0]/a[1]:0;
+      else if(op==='sub')v=a[0]-a[1];
+      else if(op==='add')v=a[0]+a[1];
+      else if(op==='inv')v=a[0]?1/a[0]:0;
+      else if(op==='avg')v=Math.max(0,Math.min(1,(a[0]+a[1])/2));
+      else if(op==='mix'){let w=0,t=0;for(let k=0;k<a.length;k+=2){w+=Math.max(0,a[k]);t+=Math.max(0,a[k])*a[k+1];}v=w?t/w:0;}
+      else if(op==='addm')v=addMonths(G[ins[0]].v,ins[1]?G[ins[1]].v:c);
+      G[id]={id,unit,op,ins,name,what,c,v:unit==='pct'?v*100:v};
+    };
+    const tagOf=k=>est[k]?'guess':'data';
+    L('capital','rs',s.capital,'choice','Amount we raise','The money we take from the investor.','You set it with the amount slider.');
+    L('rate','pct',s.rate,'choice','Monthly rate we pay',"The % of the investor's money we pay them each month.",'You set it with the rate slider. It is the deal we offer.');
+    L('months','n',s.months,'choice','Number of payments','How many monthly payments come before we return the money.','You set it with the payments slider.');
+    L('start','date',s.start,'choice','Money arrives','The month the investor gives us the money. The first payment is one month later.','You set it under the payments slider.');
+    L('profit','rs',num(s.profit),tagOf('profit'),'Net profit per month','What the business makes in a typical month, after product, delivery, tax and marketing costs.',est.profit?'You entered it as an estimate in "Our business".':'You entered it in "Our business". Best as an average of the last 3 months.');
+    L('costs','rs',num(s.costs),tagOf('costs'),'Costs not in that profit','Monthly costs not already taken out of the profit figure, such as rent and salaries.',num(s.costs)?'You entered it in "Our business".':'Rs 0 for now. If you have costs like rent or salaries that are not in your profit figure, real profit is lower than shown.'.replace('Rs',CUR));
+    L('tied','rs',num(s.tied),tagOf('tied'),'Money already working in the business','All the money stuck in the business right now: stock on hand, stock on order, and money customers or partners still owe us.',est.tied?'An estimate. Add up stock on hand + stock on order + money still owed to you to replace it.':'You entered it in "Our business".');
+    L('spend','rs',num(s.spend),tagOf('spend'),'Monthly spending','What the business spends in a month on stock, marketing, delivery and other running costs.','You entered it in "Our business".');
+    L('share','pct',s.share,'choice','Max % of profit for investors','The most of our monthly profit that all investor payments together may take.','Your rule, set in "Our business". 50% is a careful start: it keeps the other half for costs not counted, bad months and growth.');
+    const mix=[];
+    s.uses.forEach((u,k)=>{
+      L('useP'+k,'pct',u.pct,'choice','Money for: '+(u.name||'use '+(k+1)),"How much of the investor's money goes to this use.",'You set it in "How we\'ll use the money".');
+      L('useS'+k,'pct',u.sure,'guess','How sure: '+(u.name||'use '+(k+1)),'How well this use should earn, compared with our money today. Proven things get a high %, new things a low %.','A starting point. The monthly check corrects it with real results.');
+      mix.push('useP'+k,'useS'+k);
+    });
+    if(!mix.length){L('useP0','pct',100,'choice','Money for: everything','All of the money.','No uses added yet.');L('useS0','pct',100,'guess','How sure','Assumed to earn as well as today.','No uses added yet.');mix.push('useP0','useS0');}
+    const mcN=s.mcNormal==null?num(s.profit):num(s.mcNormal);
+    [['mcMonth',"This month's profit",num(s.mcMonth)],['mcNormal','Normal profit',mcN],['mcUsed','Investor money in use',num(s.mcUsed)]].forEach(m=>L(m[0],'rs',m[2],'choice',m[1],m[1]+', entered in the monthly check.','You enter it in the monthly check each month.'));
+    C('base','rs','sub',['profit','costs'],'Our profit now','What we make each month after all costs, before the deal.');
+    C('earn','pct','div',['base','tied'],'What each 100 earns us','How much profit each 100 in the business makes in a month.');
+    C('sure','pct','mix',mix,'How sure we are overall','How well the new money should earn compared with today, mixed by how much goes to each use.');
+    C('newRate','pct','mul',['earn','sure'],'What each 100 of new money earns','How much profit each 100 of investor money should make in a month.');
+    C('interest','rs','mul',['capital','rate'],'We pay the investor each month');
+    C('save','rs','div',['capital','months'],'We put aside each month');
+    C('oblig','rs','add',['interest','save'],'Paying plus saving each month','What leaves our profit each month: the payment plus the money we put aside.');
+    C('pot','rs','mul',['base','share'],'Most investors can take each month','The most all investor payments together may take from our profit each month.');
+    C('used','pct','div',['oblig','pot'],'Limit used','How much of the investor budget this deal takes each month. Over 100% is not safe.');
+    C('savePct','pct','inv',['months'],'Part we put aside each month',"The part of the investor's money we put aside each month, so it is ready at the end.");
+    C('costPct','pct','add',['rate','savePct'],'Monthly cost of each 100 raised','What each 100 we raise costs us each month: the payment plus the part we put aside.');
+    C('limit','rs','div',['pot','costPct'],'Safe amount to raise');
+    C('maxReturns','rs','div',['pot','rate'],'Most we can raise (payments only)');
+    C('extra','rs','mul',['capital','newRate'],'New money earns us each month');
+    C('gain','rs','sub',['extra','interest'],'We gain each month');
+    C('totalGain','rs','mul',['gain','months'],'What we gain over the whole deal');
+    C('fair','pct','mul',['newRate','share'],'Highest rate worth paying');
+    C('withMoney','rs','add',['base','extra'],'Our profit with the new money',"What we make each month once the investor's money is working.");
+    C('keep','rs','sub',['withMoney','interest'],'What we keep each month');
+    C('usedPct','pct','div',['interest','base'],'Part of our profit the payment takes');
+    C('giveAway','pct','div',['rate','newRate'],'Part of the earnings the investor gets');
+    C('obligPct','pct','div',['oblig','withMoney'],'Part of our profit for paying and saving');
+    C('times','x','div',['extra','interest'],'Earnings compared with the payment','How many times the monthly payment the money earns us.');
+    C('spendMonths','mo','div',['tied','spend'],'Months of spending tied up','How many months of spending the money working in the business is worth.');
+    C('totalInterest','rs','mul',['interest','months'],'All monthly payments together','Everything we pay the investor as profit, before we return their money.');
+    C('totalPaid','rs','add',['totalInterest','capital'],'Everything the investor gets');
+    C('invReturn','pct','div',['totalInterest','capital'],"The investor's return",'How much the investor earns on their money over the whole deal.');
+    C('lastPay','rs','add',['interest','capital'],'The last payment',"The last month: the monthly payment plus all of the investor's money back.");
+    C('firstMonth','date','addm',['start'],'First payment','The month we pay the investor for the first time.',1);
+    C('lastMonth','date','addm',['start','months'],'Month we return the money');
+    C('mcExtra','rs','sub',['mcMonth','mcNormal'],'Extra profit this month','The profit the new money added this month.');
+    C('mcEarned','pct','div',['mcExtra','mcUsed'],'What the new money earned','Profit for every 100 of investor money this month.');
+    C('mcReal','pct','div',['mcEarned','earn'],'Real "how sure" %','How well the new money earned, compared with our money today.');
+    C('mcNew','pct','avg',['sure','mcReal'],'New "how sure" % for next time','Halfway between the old % and the real one, so one odd month does not swing it too much.');
+    return G;
+  }
+
+  renderVals(){
+    const s=this.state,tightAt=this.props.tightAt??80;
+    const G=this.graph(),v={},t={};
+    Object.keys(G).forEach(k=>{t[k]=()=>this.setState({stack:[k]});
+      if(ANIM.includes(k)){this.tgt[k]=G[k].v;v[k]=fmtV(G[k],this.reduce?G[k].v:(this.cur[k]??G[k].v));}else v[k]=fmtV(G[k]);});
+    const S=(str,fg)=>{const out=[],re=/\{(\w+)(?:\|([^}]*))?\}/g;let i=0,m;
+      while((m=re.exec(str))){if(m.index>i)out.push({isT:true,isN:false,text:str.slice(i,m.index)});
+        out.push({isT:false,isN:true,val:m[2]!=null?m[2]:(v[m[1]]??''),go:t[m[1]]||(()=>{}),fg:fg||'#F5F7FF'});i=re.lastIndex;}
+      if(i<str.length)out.push({isT:true,isN:false,text:str.slice(i)});return out;};
+    const touch={touched:true};
+    const set=k=>e=>{const x=e.target.value;this.setState({[k]:typeof EXAMPLE[k]==='number'?+x:x});};
+    const setBiz=k=>e=>this.setState({[k]:e.target.value,...touch});
+    const fmt=k=>()=>{if(this.state[k]==null||this.state[k]==='')return;this.setState({[k]:num(this.state[k]).toLocaleString('en-US')});};
+    const on={},bl={};
+    ['capital','rate','months','start','mcMonth','mcNormal','mcUsed'].forEach(k=>on[k]=set(k));
+    ['share'].forEach(k=>on[k]=e=>this.setState({share:+e.target.value,...touch}));
+    ['name','cur'].forEach(k=>on[k]=setBiz(k));
+    ['mcMonth','mcNormal','mcUsed'].forEach(k=>bl[k]=fmt(k));
+
+    const base=G.base.v,used=G.used.v,gain=G.gain.v,fairOk=s.rate<=G.fair.v+1e-9,cashOk=G.keep.v>=G.save.v;
+    let st;
+    if(base<=0)st=[BLUE,'Add your numbers','Open "Our business" and enter your monthly profit to see how much you can raise.'];
+    else if(used>100)st=[BAD,'Too much to raise','This takes more than our limit each month. Raise less, pay a lower rate, or take more months.'];
+    else if(gain<0)st=[BAD,'Loses money','The new money earns less than we pay for it.'];
+    else if(!cashOk)st=[WARN,'Tight on cash','We gain each month, but what we keep is not enough to also put aside the repayment.'];
+    else if(!fairOk)st=[WARN,'Rate too high','We can afford it, but the investor takes too much of what the money earns.'];
+    else if(used>tightAt)st=[WARN,'Tight, but possible','We can afford it, with little room for a bad month.'];
+    else st=[GOOD,'Safe to raise','We can pay every month and have the full amount ready at the end.'];
+    const gainFg=gain>=0?GOOD:BAD;
+
+    const lim=G.limit.v,aMax=Math.max(1000,Math.ceil(Math.max(lim*2,s.capital*1.2,1000)/Math.pow(10,Math.floor(Math.log10(Math.max(lim*2,s.capital*1.2,1000)))))*Math.pow(10,Math.floor(Math.log10(Math.max(lim*2,s.capital*1.2,1000))))),
+      aStep=Math.max(1,Math.pow(10,Math.floor(Math.log10(aMax))-2)*5);
+    if(!this.aMax||s.capital>this.aMax*0.98||Math.abs(this.aBase-lim)>lim*0.25||this.aBase==null){this.aMax=aMax;this.aBase=lim;}
+    const span=this.aMax,pos=x=>Math.max(0,Math.min(100,x/span*100)),zA=pos(lim*tightAt/100),zB=pos(lim);
+    const amt={min:0,max:this.aMax,step:aStep,limitPos:zB+'%',
+      track:`linear-gradient(90deg,rgba(143,212,182,.55) 0 ${zA}%,rgba(220,192,138,.6) ${zA}% ${zB}%,rgba(229,163,151,.5) ${zB}% 100%)`};
+    const b1=base>0?base:1,payW=Math.min(100,G.interest.v/b1*100),saveW=Math.min(100-payW,G.save.v/b1*100);
+
+    const n=s.months,lastPay=G.lastPay.v||1,step=Math.ceil(n/12),rows=[];
+    for(let k=1;k<=n;k++){const last=k===n,ym=addMonths(s.start,k);
+      rows.push({n:k,month:mname(ym),xl:(k-1)%step===0||last?MON[+ym.split('-')[1]-1]:'',pay:rs(G.interest.v),back:last?rs(s.capital):'–',total:rs(G.interest.v+(last?s.capital:0)),
+        saved:rs(G.save.v*k),bg:last?'rgba(226,184,148,.1)':'transparent',fw:last?600:400,
+        hInt:(G.interest.v/lastPay*100)+'%',hBack:last?(s.capital/lastPay*100)+'%':'0%',rad:last?'0':'6px 6px 0 0',
+        title:mname(ym)+': pay '+rs(G.interest.v+(last?s.capital:0))+', put aside '+rs(G.save.v*k)});}
+    const linePts=['0,100'].concat(rows.map((r,k)=>(((k+.5)/n)*100).toFixed(2)+','+(100-G.save.v*(k+1)/lastPay*100).toFixed(2))).join(' ');
+
+    const usesTotal=s.uses.reduce((a,u)=>a+Math.max(0,u.pct),0);
+    const updU=(k,f,val)=>this.setState(x=>({uses:x.uses.map((u,i)=>i===k?{...u,[f]:val}:u),...touch}));
+    const uses=s.uses.map((u,k)=>({...u,onName:e=>updU(k,'name',e.target.value),onPct:e=>updU(k,'pct',num(e.target.value)),onSure:e=>updU(k,'sure',Math.min(100,num(e.target.value))),
+      remove:()=>this.setState(x=>({uses:x.uses.filter((_,i)=>i!==k),...touch}))}));
+    const addUse=()=>this.setState(x=>({uses:[...x.uses,{name:'',pct:0,sure:50}],...touch}));
+
+    const below=G.mcEarned.v<s.rate,dir=G.mcNew.v<G.sure.v-0.05?'(lower than now).':G.mcNew.v>G.sure.v+0.05?'(higher than now).':'(same as now).';
+    const mc={fg:below?BAD:GOOD,head:'The new money earned '+(below?'less':'more')+' than the '+v.rate+' we pay.',
+      line:(below?'If this happens 2 months in a row, stop raising money. ':'Keep going. ')+'Next time, set "how sure" to about',dir};
+    const mcSteps=[S('Extra profit: {mcMonth} − {mcNormal} = {mcExtra}. This is what the new money added.'),
+      S('New money earned: {mcExtra} ÷ {mcUsed} = {mcEarned} for every 100.'),
+      S('Real "how sure": {mcEarned} ÷ our normal {earn} = {mcReal}.'),
+      S('New "how sure": halfway between {sure} and {mcReal} = {mcNew}, so one odd month does not swing it too much.')];
+
+    const tg={},ch={},op={};
+    ['qa','full','pay','uses','mc','notes'].forEach(k=>{op[k]=!!s.open[k];ch[k]=op[k]?'−':'+';tg[k]=()=>this.setState(x=>({open:{...x.open,[k]:!x.open[k]}}));});
+
+    const est=s.est||{};
+    const field=(k,label,hint,warn,warnText)=>({label,hint,val:s[k],on:setBiz(k),blur:fmt(k),est:!!est[k],onEst:e=>this.setState(x=>({est:{...x.est,[k]:e.target.checked},...touch})),warn:!!warn,warnText:warnText||''});
+    const bizFields=[
+      field('profit','Net profit per month','A typical month after product, delivery, tax and marketing costs. An average of your last 3 months works best.',num(s.profit)<=0,'Enter your monthly profit. Everything else depends on it.'),
+      field('costs','Costs not in that profit','Rent, salaries or anything else not already taken out. Leave 0 if your profit already includes everything.'),
+      field('tied','Money already working in the business','Stock on hand + stock on order + money customers or partners still owe you.',num(s.tied)<=0,'Needed to work out what each 100 earns.'),
+      field('spend','Monthly spending (optional)','Only used to show how many months of spending your money in the business covers.')];
+
+    const leaves=(id,seen={})=>{const m=G[id];if(!m||seen[id])return [];seen[id]=1;if(!m.ins)return m.tag?[m]:[];return m.ins.reduce((o,k)=>o.concat(leaves(k,seen)),[]);};
+    const uniq=a=>a.filter((m,i)=>a.findIndex(x=>x.id===m.id)===i);
+    const gainGuesses=uniq(leaves('gain')).filter(m=>m.tag==='guess');
+    const allGuesses=uniq(leaves('gain').concat(leaves('limit'))).filter(m=>m.tag==='guess');
+
+    const notes=[];
+    ['profit','costs','tied','spend'].forEach(k=>{if(k==='spend'&&!num(s.spend))return;const g=G[k],tgx=TAGS[g.tag];notes.push({tag:tgx[0],bg:tgx[1],fg:tgx[2],text:g.name+': '+fmtV(g)+'.'+(g.tag==='guess'?' Replace with a real figure when you can.':'')});});
+    s.uses.forEach((u,k)=>notes.push({tag:TAGS.guess[0],bg:TAGS.guess[1],fg:TAGS.guess[2],text:'How sure for "'+(u.name||'use '+(k+1))+'": '+u.sure+'%. The monthly check corrects it.'}));
+    notes.push({tag:'Your rule',bg:TAGS.choice[1],fg:TAGS.choice[2],text:v.rate+' of the money each month, first payment one month after receiving it, money returned with the last payment.'});
+    notes.push({tag:'Your rule',bg:TAGS.choice[1],fg:TAGS.choice[2],text:'Investor payments may take at most '+v.share+' of monthly profit. The rate is always paid on the original amount.'});
+    notes.push({tag:'Not covered',bg:'rgba(255,255,255,.1)',fg:'rgba(235,240,255,.8)',text:'Tax on payments, and what happens if a month makes a loss. Put these in the written agreement.'});
+
+    const k=(label,id,fg,note)=>({label,val:v[id],go:t[id],fg:fg||'#F5F7FF',note:note||''});
+    const kpis=[k('We keep monthly','keep',BLUE,'After the investor is paid'),k('We gain over '+v.months,'totalGain',gainFg,'Gain each month × payments'),
+      k('Investor gets monthly','interest','#E2B894',v.firstMonth+' to '+v.lastMonth),k('Investor gets in total','totalPaid','#E2B894','Incl. '+v.totalInterest+' profit'),
+      k('Money goes back','lastMonth','#F5F7FF',v.lastPay+' in one go'),k('Safe amount to raise','limit',BLUE,'Paying and saving to repay'),
+      k('Most we can raise, payments only','maxReturns',BLUE,'Ignores saving to repay'),k('Highest rate worth paying','fair',BLUE,v.share+' of the '+v.newRate+' the money earns')];
+    const chk=(ok,title,sub)=>({fg:ok?GOOD:BAD,ok,title:S(title),sub:S(sub)});
+    const checks=[
+      chk(G.usedPct.v<=s.share,'Payments use {usedPct} of profit (limit {share})','{interest} a month out of {base} profit.'),
+      chk(fairOk,'Rate {rate} '+(fairOk?'is within':'is above')+' the highest rate worth paying, {fair}','The investor gets {giveAway} of what their money earns us.'),
+      chk(G.obligPct.v<=100,'Paying and saving to repay takes {obligPct} of monthly profit','{interest} to the investor + {save} put aside each month, so {lastPay} is ready in {lastMonth}.'),
+      chk(cashOk,'Put aside {save} a month: '+(cashOk?'we can cover it':'not enough'),'After paying the investor we keep {keep} a month. We repay {lastPay} at once in {lastMonth}.')];
+    const fails=checks.filter(c=>!c.ok).length;
+
+    const good=gain>=0,lose='{gain|'+rs(-gain)+'}';
+    const P=(str)=>({b:false,segs:S(str)}),B=(str)=>({b:true,segs:S(str)});
+    const usesTxt=s.uses.filter(u=>u.pct>0).map(u=>(u.name||'other').toLowerCase()).join(', ')||'the business';
+    const qa=[
+      {q:'Is this deal good for us?',items:[P(base<=0?'Add your monthly profit first.':!good?'No. The investor costs more than the money earns. We lose '+lose+' each month.':cashOk?'Yes. Each month, we gain about {gain} after we pay the investor. We can also return the money on time.'+(fairOk?'':' But the rate is above the highest rate worth paying, {fair}.'):'Partly. We gain {gain} each month, but our profit is not enough to also put aside {save} each month.')]},
+      {q:'What is the deal?',items:[B('The investor gives us {capital} in {start}.'),B('Each month, we pay the investor {interest}. This is {rate} of {capital}.'),
+        B(n===1?'We pay once, in {firstMonth}.':'We pay {months|'+n+'} times, from {firstMonth} to {lastMonth}.'),B('In {lastMonth}, we also return the {capital}.'),B('In total, the investor gets {totalPaid}.')]},
+      {q:'What does the money do for us?',items:[B('We use the {capital} for: '+usesTxt+'.'),B('We expect this to bring about {extra} more profit each month.'),B('From this, we pay the investor {interest}.'),
+        B(good?'We keep the other {gain}. This is our gain.':'That is less than the payment, so we lose '+lose+' each month.')]},
+      {q:'Is '+v.interest+' a month safe for us?',items:[P(G.usedPct.v<=s.share?'Yes. Our profit now is {base} each month. {interest} is only {usedPct} of it. Our limit is {share}, so we can pay it even in a weaker month.':'No. {interest} is {usedPct} of our profit ({base}). That is above our limit of {share}.')]},
+      {q:'Can we return the '+v.capital+' in '+v.lastMonth+'?',items:cashOk?[P('Yes. Each month, we put {save} aside ({capital} ÷ {months}). By {lastMonth}, this adds up to the {capital}.')].concat(G.save.v>gain?[P('{save} is more than our gain of {gain}. That is not a loss, because saving is not spending. It comes from all our profit, which is {keep} each month with the deal.')]:[]):[P('Not yet. We would need to put {save} aside each month, but we keep only {keep}.')]},
+      {q:'How much can we take from all investors together?',items:[P('At {rate}, about {limit} at most. Each month, the money costs us {costPct} of what we take: {rate} to the investor and {savePct} put aside. Above {limit}, this would take more than our max ({share}) of profit.')]},
+      {q:'What is not sure yet?',items:[P(gainGuesses.length?'Our gain of {gain} depends on '+gainGuesses.length+' estimate'+(gainGuesses.length>1?'s':'')+': '+gainGuesses.map(m=>'{'+m.id+'|'+m.name.replace(/^How sure: /,'how sure for ')+' ('+fmtV(m)+')}').join(', ')+'. Tap one to see how to replace it.':'Nothing. Every number here comes from real figures or your choices.')]}];
+
+    const heroLine=S(st[2]+(base>0?' The money should earn us {extra} a month, so we gain ':''),'#F5F7FF').concat(base>0?S('{gain|'+sg(gain)+'}.',gainFg):[]);
+
+    const er=G.earn.v,nr=G.newRate.v,give=G.giveAway.v,ok=cashOk;
+    const EX={
+      tied:['Now set to {tied}.'+(num(s.spend)?' That is about {spendMonths} of spending.':''),'If it is an estimate, replace it with stock on hand + stock on order + money still owed to you.'],
+      earn:[er>s.rate?'Good. It is far above the {rate} we pay investors.':'Careful. It is below the {rate} we pay, so investor money would cost more than it earns.','If this falls below the % we pay, stop raising money.'],
+      share:['{share} of {base} = {pot} a month for all investors together.','Lower is safer. 30% to 50% leaves room for a bad month.'],
+      sure:['So new money should earn {earn} × {sure} = {newRate} a month.','Proven things deserve a high %. Something new deserves a low %. Correct them with the monthly check.'],
+      gain:[good?'We come out ahead. The money earns more than it costs.':'We lose money. The investor costs more than the money earns.',good?'Fine as it is. Check again when our profit changes.':'Lower the rate to {fair} or less, or raise less money.'],
+      extra:[G.interest.v>0?'That is {times} what we pay the investor.':'We pay the investor nothing.','This is an estimate. Check it with the monthly check after the first month.'],
+      interest:['That is {usedPct} of our monthly profit.','This amount is fixed. It does not go down in a bad month, so we must always be able to pay it.'],
+      totalGain:[good?'This is our reward for taking the deal.':'This is what the deal would cost us.',good?'Compare deals by this number.':'Change the deal until this turns positive.'],
+      save:[ok?'We keep {keep} a month, so we can afford it.':'We keep only {keep} a month. That is not enough.',ok?'Keep this money separate, so it is ready on the day.':'Raise less money, or choose more months, so the monthly amount is smaller.'],
+      totalPaid:['The investor earns {invReturn} on their money in {months}.','This is the full promise. Tell the investor this number.'],
+      lastMonth:['In {lastMonth} we pay {lastPay} at once. It is the biggest payment.','Have {lastPay} ready by then. The monthly saving makes this possible.'],
+      keep:['Without the deal we keep {base}. With it we keep '+(good?'{gain} more.':rs(-gain)+' less.'),'Part of this goes into the monthly saving ({save}).'],
+      maxReturns:['Raising {capital} uses '+(G.maxReturns.v>0?(Math.round(s.capital/G.maxReturns.v*1000)/10):0)+'% of this limit.','This limit ignores returning the money. Use the safe amount to decide.'],
+      limit:[s.capital<=lim?'{capital} is within this limit.':'{capital} is above this limit.','This is the safer limit. Use it when you decide how much to raise.'],
+      used:[used<=tightAt?'Plenty of room for a weaker month.':used<=100?'Affordable, but little room for a bad month.':'Over the limit. A normal month could leave us short.',used<=100?'Nothing to do.':'Raise less, pay a lower rate, or choose more months.'],
+      fair:[fairOk?'We pay {rate}, which is within the limit.':'We pay {rate}, which is above the limit.',fairOk?'Keep the rate at or below {fair}.':'Lower the rate to {fair} or less.'],
+      usedPct:[G.usedPct.v<=s.share?'Safe. Even in a weaker month we can pay.':'Too high. A weaker month could leave us short.',G.usedPct.v<=s.share?'Nothing to do.':'Raise less money or lower the rate.'],
+      giveAway:[give<=s.share?'Fair. We keep '+(Math.round((100-give)*10)/10)+'% of what the money earns.':'Too much. The investor takes {giveAway}, above our {share} limit.',give<=s.share?'Nothing to do.':'Lower the rate to {fair} or less.'],
+      obligPct:[G.obligPct.v<=100?'We can afford both.':'We cannot afford both.',G.obligPct.v<=100?'Keep saving every month.':'Raise less money, or choose more months.']};
+    const WHAT={limit:'The most we can raise at these terms and still pay and put aside every month.',maxReturns:'The most we can raise at this rate, counting only the monthly payments.',
+      extra:"The extra profit we expect the investor's money to make each month.",gain:'The extra money we keep each month because of this deal.',
+      interest:'What we pay the investor every month until we return their money.',save:"Money we set aside each month, so we can return the investor's money at the end.",
+      totalGain:'What we gain over the whole deal.',totalPaid:'Everything the investor receives from this deal.',lastMonth:"The month we return the investor's money.",
+      keep:'Our profit after the investor is paid.',fair:'The highest monthly % we can pay and still keep most of what the money earns.',
+      usedPct:'Checks that the monthly payment is a small enough part of our profit.',giveAway:'Checks that the investor does not take too much of what their money earns.',
+      obligPct:'Checks that we can pay the investor and save for the return at the same time.'};
+
+    const top=s.stack[s.stack.length-1],nd=top&&G[top];let tp={};
+    if(nd){
+      const push=id=>()=>this.setState(x=>({stack:[...x.stack,id]}));
+      const chipOf=id=>({isChip:true,isOp:false,val:fmtV(G[id]),name:G[id].name,go:push(id)});
+      const parts=[],o=x=>parts.push({isOp:true,isChip:false,text:x}),c=id=>parts.push(chipOf(id));
+      if(nd.ins){
+        if(nd.op==='mix'){for(let i=0;i<nd.ins.length;i+=2){if(i)o('+');c(nd.ins[i]);o('×');c(nd.ins[i+1]);}if(Math.round(usesTotal)!==100&&s.uses.length)o('÷ '+Math.round(usesTotal)+'%');}
+        else if(nd.op==='inv'){o('100% ÷');c(nd.ins[0]);}
+        else if(nd.op==='avg'){o('(');c(nd.ins[0]);o('+');c(nd.ins[1]);o(') ÷ 2');}
+        else if(nd.op==='addm'){c(nd.ins[0]);o('+');nd.ins[1]?c(nd.ins[1]):o(nd.c+' month');}
+        else nd.ins.forEach((id,i)=>{if(i)o(OPS[nd.op]);c(id);});
+        o('=');
+      }
+      const gs=nd.ins?uniq(leaves(top)).filter(m=>m.tag==='guess').map(m=>chipOf(m.id)):[];
+      const usedIn=Object.keys(G).filter(id=>G[id].ins&&G[id].ins.includes(top)).map(chipOf);
+      const tag=nd.tag?TAGS[nd.tag]:['Worked out','rgba(255,255,255,.1)','rgba(235,240,255,.72)'];
+      const ex=EX[top];
+      tp={name:nd.name,val:fmtV(nd),what:WHAT[top]||nd.what||'',tag:tag[0],tagBg:tag[1],tagFg:tag[2],isCalc:!!nd.ins,isLeaf:!nd.ins,src:nd.src||'',sure:nd.tag?TAGTXT[nd.tag]:'',
+        parts,guesses:gs,hasGuesses:gs.length>0,noGuesses:!!nd.ins&&!gs.length,guessLine:gs.length===1?'Rough. It depends on this estimate:':'Rough. It depends on these '+gs.length+' estimates:',
+        usedIn,hasUsed:usedIn.length>0,canBack:s.stack.length>1,hasMeans:!!ex,means:ex?S(ex[0]):[],todo:ex?S(ex[1]):[]};
     }
-    if (n.means) h.push('<h4>What it means now</h4><p>' + n.means + '</p>');
-    if (n.todo) h.push('<h4>What to do</h4><p>' + n.todo + '</p>');
-    var used = Object.keys(G).filter(function(k){ return G[k].ins && G[k].ins.indexOf(id) >= 0 && !/^saved\d/.test(k); });
-    if (used.length) h.push('<h4>Used to work out</h4><div class="tp-sum">' + used.map(chipH).join('') + '</div>');
+    const mob=s.w<560;
+    const sheet=mob?{align:'flex-end',h:'auto',maxH:'88vh',r:'20px 20px 0 0'}:{align:'stretch',h:'100%',maxH:'100%',r:'0'};
+
+    return {s,v,t,on,bl,tg,ch,op,rows,linePts,uses,addUse,mc,mcSteps,bizFields,tp,qa,kpis,checks,notes,heroLine,sheet,
+      cur:CUR,per100:CUR+' 100',eyebrow:(s.name||'').trim()?s.name.trim()+' · investor deals':'Investor deals',
+      showExample:!s.touched,
+      st:{fg:st[0],head:st[1],line:st[2],bg:BGS[st[0]]},
+      checksLine:fails?fails+' of 4 checks need attention':'All 4 checks pass',checksFg:fails?BAD:GOOD,
+      guessLine:allGuesses.length?allGuesses.length+' estimate'+(allGuesses.length>1?'s':'')+' affect the result':'Everything is a real figure',
+      amt,split:{pay:payW+'%',save:saveW+'%',limit:pc(s.share)},
+      rateFill:pc((s.rate-0.5)/9.5*100),monthsFill:pc((s.months-1)/35*100),shareFill:pc((s.share-10)/90*100),
+      chartGap:n>24?'3px':n>12?'5px':'10px',yMax:short(lastPay),yHalf:short(lastPay/2),
+      usesTotal:Math.round(usesTotal),usesWarn:s.uses.length>0&&Math.round(usesTotal)!==100,
+      mcNormalVal:s.mcNormal==null?s.profit:s.mcNormal,hasSpend:num(s.spend)>0,
+      openDrawer:()=>this.setState({drawer:true}),closeDrawer:()=>this.setState({drawer:false}),
+      startBlank:()=>this.setState({name:'',profit:'',costs:'0',tied:'',spend:'',mcMonth:'',mcNormal:null,mcUsed:'',est:{profit:false,costs:false,tied:false,spend:false},touched:true,drawer:true}),
+      resetExample:()=>this.setState({...JSON.parse(JSON.stringify(EXAMPLE)),touched:false,drawer:false}),
+      hasTp:!!nd,closeTp:()=>this.setState({stack:[]}),backTp:()=>this.setState(x=>({stack:x.stack.slice(0,-1)}))};
   }
-  $('tpBody').innerHTML = h.join('');
-  $('tpCard').scrollTop = 0;
 }
-function openTrace(id, fresh){
-  if (!G[id]) return;
-  if (fresh || $('tp').hidden){ tpStack = []; tpLast = document.activeElement; }
-  tpStack.push(id); drawTrace();
-  $('tp').hidden = false; document.body.classList.add('tp-open'); $('tpCard').focus();
-}
-function closeTrace(){
-  $('tp').hidden = true; document.body.classList.remove('tp-open'); tpStack = [];
-  if (tpLast && tpLast.focus) tpLast.focus();
-}
-document.addEventListener('click', function(e){
-  var go = e.target.closest('[data-go]');
-  if (go){ var el = $(go.dataset.go); closeTrace(); if (el){ el.scrollIntoView({block:'center', behavior:reduce ? 'auto' : 'smooth'}); el.focus({preventScroll:true}); } return; }
-  var t = e.target.closest('[data-n]');
-  if (t){ e.preventDefault(); openTrace(t.dataset.n); }
-});
-document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape' && !$('tp').hidden){ closeTrace(); return; }
-  var t = e.target.closest && e.target.closest('[data-n][role=button]');
-  if (t && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openTrace(t.dataset.n); }
-});
-$('tpX').onclick = closeTrace; $('tpBg').onclick = closeTrace;
-$('tpPrev').onclick = function(){ tpStack.pop(); drawTrace(); };
-
-/* animated number: counts from its current value to the target */
-function tween(el, to, fmt){
-  if (el._to === to && el._f === fmt) return;
-  var from = el._v == null ? to : el._v; el._to = to; el._f = fmt;
-  cancelAnimationFrame(el._raf);
-  if (reduce || from === to){ el._v = to; el.textContent = fmt(to); return; }
-  var t0 = performance.now();
-  (function tick(t){
-    var q = Math.min(1, (t - t0) / 550), e = 1 - Math.pow(1 - q, 3);
-    el._v = from + (to - from) * e; el.textContent = fmt(el._v);
-    if (q < 1) el._raf = requestAnimationFrame(tick);
-  })(t0);
-}
-
-/* ---- build static controls ---- */
-var seg = $('seg');
-LETTERS.forEach(function(l, k){
-  var b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'tab'); b.textContent = 'Deal ' + l;
-  b.onclick = function(){ pick(k); }; seg.appendChild(b);
-});
-var cardsEl = $('cards');
-LETTERS.forEach(function(l, k){
-  var c = document.createElement('button'); c.type = 'button'; c.className = 'card';
-  c.innerHTML = '<div class="card-top"><span>Deal ' + l + '</span><span class="pill"><i></i><em style="font-style:normal"></em></span></div>' +
-    '<div class="card-gain"><b class="tnum"></b><span>/ month</span></div><div class="card-terms"></div>';
-  c.onclick = function(){ pick(k); }; cardsEl.appendChild(c);
-});
-var slidersEl = $('sliders'), sl = [];
-SLIDERS.forEach(function(s){
-  var row = document.createElement('div'); row.className = 'row';
-  var id = 'sl-' + s.k;
-  row.innerHTML = '<div class="row-head"><label for="' + id + '">' + s.label + '</label><span class="row-val tnum"></span></div>' +
-    '<div class="slider"><div class="track"></div><div class="fill"></div><input type="range" id="' + id + '" min="' + s.min + '" max="' + s.max + '" step="' + s.step + '"></div>' +
-    (s.hint ? '<div class="hint"></div>' : '');
-  slidersEl.appendChild(row);
-  var inp = row.querySelector('input');
-  inp.addEventListener('input', function(){ state.sc[state.active][s.k] = +inp.value; render(); });
-  sl.push({s:s, row:row, inp:inp, val:row.querySelector('.row-val'), fill:row.querySelector('.fill'), hint:row.querySelector('.hint')});
-});
-slidersEl.style.cssText = 'display:flex;flex-direction:column;gap:20px';
-
-var chips = $('profChips');
-Object.keys(PROFIT).forEach(function(k){
-  var b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = k; b.dataset.v = PROFIT[k];
-  b.onclick = function(){ state.profit = PROFIT[k].toLocaleString('en-US'); $('profit').value = state.profit; render(); };
-  chips.appendChild(b);
-});
-$('start').addEventListener('input', function(){ state.sc[state.active].start = this.value; render(); });
-['profit','costs'].forEach(function(id){
-  $(id).addEventListener('input', function(){ state[id] = this.value; render(); });
-  $(id).addEventListener('blur', function(){ this.value = state[id] = num(this.value).toLocaleString('en-US'); render(); });
-});
-
-$('share').addEventListener('input', function(){ state.share = +this.value; render(); });
-$('tied').addEventListener('input', function(){ state.tied = this.value; render(); });
-$('tied').addEventListener('blur', function(){ this.value = state.tied = num(this.value).toLocaleString('en-US'); render(); });
-['mcMonth','mcNormal','mcUsed'].forEach(function(id){
-  $(id).addEventListener('input', function(){ state.mc[id] = this.value; render(); });
-  $(id).addEventListener('blur', function(){ this.value = state.mc[id] = num(this.value).toLocaleString('en-US'); render(); });
-});
-var usesEl = $('uses');
-state.uses.forEach(function(u, k){
-  var row = document.createElement('div'); row.className = 'use'; row.style.marginBottom = '8px';
-  row.innerHTML = '<input type="text" id="useN' + k + '" aria-label="Use ' + (k + 1) + ' name">' +
-    '<label>% of money<input type="number" id="useP' + k + '" min="0" max="100" step="5"></label>' +
-    '<label>Safety %<input type="number" id="useS' + k + '" min="0" max="100" step="5"></label>';
-  usesEl.appendChild(row);
-  var n = row.children[0], pc = $('useP' + k), sf = $('useS' + k);
-  n.value = u.name; pc.value = u.pct; sf.value = u.safe;
-  n.addEventListener('input', function(){ u.name = n.value; render(); });
-  pc.addEventListener('input', function(){ u.pct = num(pc.value); render(); });
-  sf.addEventListener('input', function(){ u.safe = Math.min(100, num(sf.value)); render(); });
-});
-[['heroGain','gain'],['eqExtra','extra'],['eqPay','interest'],['eqTotal','totalGain'],['k1','interest'],['k2','totalPaid'],['k3','lastMonth'],['k4','keep'],
- ['maxRet','maxReturns'],['maxRep','maxRepay'],['fairRate','fairRate'],['earnVal','earn'],['newRateVal','newRate'],['shareVal','share']].forEach(function(p){
-  var el = $(p[0]); el.dataset.n = p[1]; el.classList.add('tn'); el.setAttribute('role', 'button'); el.tabIndex = 0;
-});
-sl.forEach(function(x){ x.val.dataset.n = x.s.k; x.val.classList.add('tn'); x.val.setAttribute('role', 'button'); x.val.tabIndex = 0; });
-function pick(k){ state.active = Math.min(k, COUNT - 1); $('start').value = state.sc[state.active].start; render(); }
-
-var barsBuilt = 0;
-function render(){
-  var a = state.active, d = state.sc[a], i = inputs(d), r = calc(i), last = r.rows[r.rows.length - 1];
-  var good = r.gain >= 0, ok = r.keep >= r.save, n = i.months, st = verdict(good, ok, i.rate <= i.extraPct * state.share / 100);
-  buildGraph(i);
-
-  $('thumb').style.transform = 'translateX(' + (a * (seg.firstElementChild.nextElementSibling.offsetWidth || 96)) + 'px)';
-  Array.prototype.forEach.call(seg.querySelectorAll('button'), function(b, k){ b.setAttribute('aria-selected', k === a); });
-
-  Array.prototype.forEach.call(cardsEl.children, function(c, k){
-    var dd = state.sc[k], ii = inputs(dd), rr = calc(ii), ss = verdict(rr.gain >= 0, rr.keep >= rr.save, ii.rate <= ii.extraPct * state.share / 100);
-    c.setAttribute('aria-pressed', k === a);
-    var p = c.querySelector('.pill'); p.style.background = ss.bg; p.style.color = ss.fg; p.querySelector('em').textContent = ss.t;
-    var g = c.querySelector('.card-gain b'); g.style.color = ss.fg; tween(g, rr.gain, sg);
-    c.querySelector('.card-terms').textContent = short(ii.capital) + ' at ' + ii.rate + '% for ' + ii.months + ' months';
-  });
-
-  $('termsTitle').textContent = 'Deal ' + LETTERS[a] + ' terms';
-  sl.forEach(function(x){
-    var v = d[x.s.k]; if (document.activeElement !== x.inp || +x.inp.value !== v) x.inp.value = v;
-    x.val.textContent = x.s.text(d);
-    x.fill.style.width = ((v - x.s.min) / (x.s.max - x.s.min) * 100) + '%';
-    if (x.hint) x.hint.innerHTML = x.s.hint(d, r);
-  });
-  Array.prototype.forEach.call(chips.children, function(c){ c.setAttribute('aria-pressed', +c.dataset.v === i.profit); });
-  $('costWarn').hidden = i.costs > 0;
-
-  $('heroQ').textContent = 'Deal ' + LETTERS[a] + ' · what we gain each month';
-  var hg = $('heroGain'); hg.style.color = st.fg; tween(hg, r.gain, sg);
-  $('heroGlow').style.background = 'radial-gradient(closest-side,' + st.glow + ',transparent)';
-  $('heroLine').textContent = good ? 'The money earns more than we pay for it, so we come out ahead.' : 'We pay the investor more than the money earns, so we lose on this deal.';
-  var hp = $('heroPill'); hp.style.background = st.bg; hp.style.color = st.fg; $('heroPillT').textContent = st.t;
-  tween($('eqExtra'), r.extra, function(v){return '+' + rs(v)});
-  tween($('eqPay'), r.interest, function(v){return '−' + rs(v)});
-  $('eqTotalQ').textContent = 'Over ' + n + ' months';
-  var et = $('eqTotal'); et.style.color = st.fg; tween(et, r.gain * n, sg);
-
-  $('saveT').innerHTML = 'Put aside ' + T('save') + ' a month';
-  var cp = $('cashPill'); cp.style.color = ok ? '#8FD4B6' : '#E5A397'; cp.textContent = ok ? 'We can cover it' : 'Not enough';
-  var cb = $('cashBar'); cb.style.width = Math.max(0, Math.min(100, r.keep / Math.max(r.save, 1) * 100)) + '%';
-  cb.style.background = ok ? 'linear-gradient(90deg,#6FB89C,#9CD5BE)' : 'linear-gradient(90deg,#C08677,#E2A496)';
-  $('cashText').innerHTML = 'We repay ' + T('lastPay') + ' at once in ' + T('lastMonth') + '. After paying the investor we keep ' + T('keep') + ' a month.';
-
-  tween($('k1'), r.interest, rs); $('k1n').innerHTML = T('firstMonth') + ' to ' + T('lastMonth');
-  tween($('k2'), r.totalPaid, rs); $('k2n').innerHTML = 'Incl. ' + T('totalInterest') + ' profit';
-  $('k3').textContent = mname(last.ym); $('k3n').innerHTML = T('lastPay') + ' in one go';
-  tween($('k4'), r.keep, rs);
-
-  /* how much can we raise */
-  var pl = plan(i, r, state.share), GOOD = '#8FD4B6', BAD = '#E5A397';
-  [['interest', r.interest], ['save', r.save], ['extra', r.extra], ['gain', r.gain], ['keep', r.keep], ['totalPaid', r.totalPaid], ['lastPay', r.lastPay],
-   ['pot', pl.pot], ['maxRepay', pl.maxRepay], ['fairRate', pl.fairRate], ['usedPct', pl.usedPct], ['obligPct', pl.obligPct]].forEach(function(p){
-    if (Math.abs(G[p[0]].v - p[1]) > 1e-6 * Math.max(1, Math.abs(p[1]))) console.error('trace mismatch: ' + p[0], G[p[0]].v, p[1]);
-  });
-  $('shareVal').textContent = state.share + '%';
-  $('shareFill').style.width = ((state.share - 10) / 90 * 100) + '%';
-  $('potT').innerHTML = T('share') + ' of ' + T('base') + ' = ' + T('pot') + ' a month for all investors';
-  $('maxRetQ').textContent = 'Most we can raise at ' + i.rate + '%';
-  $('maxRet').textContent = isFinite(pl.maxReturns) ? rs(pl.maxReturns) : 'No limit';
-  $('maxRep').textContent = rs(pl.maxRepay);
-  $('maxRepN').innerHTML = 'Also saving to repay it in ' + T('months');
-  $('fairRate').textContent = fmtV(G.fairRate) + ' a month';
-  $('fairRateN').innerHTML = T('share') + ' of the ' + T('newRate') + ' the money earns';
-  var chk = function(id, ok, t, sub){ $(id + 'i').style.background = ok ? GOOD : BAD; $(id).innerHTML = t; $(id).style.color = ok ? GOOD : BAD; $(id + 'n').innerHTML = sub; };
-  chk('c1', pl.usedPct <= state.share, 'Payments use ' + T('usedPct') + ' of profit (limit ' + T('share') + ')',
-    T('interest') + ' a month out of ' + T('base') + ' profit.');
-  chk('c2', i.rate <= pl.fairRate, 'Rate ' + T('rate') + ' ' + (i.rate <= pl.fairRate ? 'is within' : 'is above') + ' the fair maximum of ' + T('fairRate'),
-    'The investor gets ' + T('giveAway') + ' of what their money earns us.');
-  chk('c3', pl.obligPct <= 100, 'Paying and saving to repay takes ' + T('obligPct') + ' of monthly profit',
-    T('interest') + ' to the investor + ' + T('save') + ' saved each month, so ' + T('lastPay') + ' is ready in ' + T('lastMonth') + '.');
-
-  /* earning rate, money split */
-  var er = baseRate(), bl = blend(state.uses), nr = er * bl.safe / 100, tied = num(state.tied);
-  var p1 = function(v){ return isFinite(v) ? (Math.round(v * 10) / 10) + '%' : '–'; };
-  $('earnVal').textContent = fmtV(G.earn) + ' a month';
-  $('earnHint').innerHTML = T('base') + ' profit ÷ ' + T('tied') + ' tied up';
-  $('newRateVal').textContent = fmtV(G.newRate) + ' a month';
-  $('newRateHint').innerHTML = 'Our ' + T('earn') + ' × safety ' + T('blendSafe') + ' = ' + T('newRate');
-  $('useWarn').hidden = Math.round(bl.total) === 100;
-  $('useWarnT').textContent = 'The % of money adds up to ' + Math.round(bl.total) + '%. Make it 100%.';
-
-  /* monthly check */
-  var mcIn = {month:num(state.mc.mcMonth), normal:num(state.mc.mcNormal), used:num(state.mc.mcUsed)};
-  var mc = monthly({month:mcIn.month, normal:mcIn.normal, used:mcIn.used, normalRate:er, oldSafe:bl.safe, rate:i.rate});
-  $('mcSteps').innerHTML = [
-    '<b>Normal profit: ' + T('mcNormal') + '.</b> This is what a usual month looks like.',
-    '<b>Extra profit: ' + T('mcMonth') + ' − ' + T('mcNormal') + ' = ' + T('mcExtra') + '.</b> This is the profit the new money added.',
-    '<b>New money earned: ' + T('mcExtra') + ' ÷ ' + T('mcUsed') + ' = ' + T('mcEarned') + '.</b> Profit for every Rs 100 of investor money this month.',
-    '<b>Real safety: ' + T('mcEarned') + ' ÷ our normal ' + T('earn') + ' = ' + T('mcReal') + '.</b> The new money earned ' + T('mcReal') + ' as well as our current money.',
-    '<b>New safety %: halfway between ' + T('blendSafe') + ' and ' + T('mcReal') + ' = ' + T('mcNew') + '.</b> Halfway, so one odd month does not swing it too much.'
-  ].map(function(t){ return '<li>' + t + '</li>'; }).join('');
-  $('mcI').style.background = mc.belowCost ? BAD0 : GOOD0;
-  $('mcT').style.color = mc.belowCost ? BAD0 : GOOD0;
-  $('mcT').innerHTML = 'The new money earned ' + (mc.belowCost ? 'less' : 'more') + ' than the ' + T('rate') + ' we pay.';
-  $('mcN').innerHTML = (mc.belowCost ? 'If this happens 2 months in a row, stop raising money. ' : 'Keep going. ') +
-    'Next time, use about ' + T('mcNew') + ' as the safety % ' + (mc.newSafe < bl.safe ? '(lower than now).' : mc.newSafe > bl.safe ? '(higher than now).' : '(same as now).');
-
-  /* short answer: questions and answers, every number tappable */
-  var pl0 = pl, Lt = LETTERS[a];
-  var Q = function(q, body){ return '<div><h3>' + q + '</h3>' + body + '</div>'; };
-  var P = function(t){ return '<p>' + t + '</p>'; };
-  var UL = function(xs){ return '<ul>' + xs.map(function(t){ return '<li>' + t + '</li>'; }).join('') + '</ul>'; };
-  var lose = T('gain', rs(-r.gain)), guesses = leaves('gain').filter(function(m){ return m.tag === 'guess'; });
-  $('sumT').textContent = 'Deal ' + Lt + ': the short answer';
-  $('sum').innerHTML = [
-    Q('Is Deal ' + Lt + ' good for us?', P(!good ? 'No. The investor costs more than the money earns. We lose ' + lose + ' each month.'
-      : ok ? 'Yes. Each month, we gain approximately ' + T('gain') + ' after we pay the investor. We can also return the money on time.' + (i.rate <= pl0.fairRate ? '' : ' But the rate is above the fair maximum of ' + T('fairRate') + '.')
-      : 'Partly. We gain ' + T('gain') + ' each month, but our profit is not enough to also put aside ' + T('save') + ' each month.')),
-    Q('What is the deal?', UL([
-      'The investor gives us ' + T('capital') + ' in ' + T('start') + '.',
-      'Each month, we pay the investor ' + T('interest') + '. This is ' + T('rate') + ' of ' + T('capital') + '.',
-      'We pay ' + T('months', String(n)) + (n === 1 ? ' time, in ' + T('firstMonth') : ' times, from ' + T('firstMonth') + ' to ' + T('lastMonth')) + '.',
-      'In ' + T('lastMonth') + ', we also return the ' + T('capital') + '.',
-      'In total, the investor gets ' + T('totalPaid') + '.'])),
-    Q('What does the money do for us?', UL([
-      'We use the ' + T('capital') + ' for: ' + state.uses.filter(function(u){ return u.pct > 0; }).map(function(u){ return esc(u.name.toLowerCase()); }).join(', ') + '.',
-      'We calculate that this gives us approximately ' + T('extra') + ' more profit each month.',
-      'From this, we pay the investor ' + T('interest') + '.',
-      good ? 'We keep the other ' + T('gain') + '. This is our gain.' : 'That is less than the payment, so we lose ' + lose + ' each month.'])),
-    Q('Is ' + rs(r.interest) + ' a month safe for us?', P(pl0.usedPct <= state.share
-      ? 'Yes. Our profit now is ' + T('base') + ' each month. ' + T('interest') + ' is only ' + T('usedPct') + ' of it. Our limit is ' + T('share') + ', so we can pay it even in a weaker month.'
-      : 'No. ' + T('interest') + ' is ' + T('usedPct') + ' of our profit (' + T('base') + '). That is above our limit of ' + T('share') + '.')),
-    Q('Can we return the ' + rs(i.capital) + ' in ' + mname(last.ym) + '?', ok
-      ? P('Yes. Each month, we put ' + T('save') + ' aside (' + T('capital') + ' ÷ ' + T('months') + '). By ' + T('lastMonth') + ', this adds up to the ' + T('capital') + '.') +
-        (r.save > r.gain ? P(T('save') + ' is more than our gain of ' + T('gain') + '. That is not a loss, because saving is not spending. The saving comes from all our profit, which is ' + T('keep') + ' each month with the deal.') : '')
-      : P('Not yet. We would need to put ' + T('save') + ' aside each month, but we keep only ' + T('keep') + '.')),
-    Q('How much can we take from all investors together?', P('At ' + T('rate') + ', approximately ' + T('maxRepay') + ' at most. Each month, the money costs us ' + T('costPct') +
-      ' of what we take: ' + T('rate') + ' to the investor and ' + T('savePct') + ' put aside. Above ' + T('maxRepay') + ', this would take more than our safe share (' + T('share') + ') of profit.')),
-    Q('What is not sure yet?', P(guesses.length ? 'Our gain of ' + T('gain') + ' depends on ' + guesses.length + ' guesses: ' +
-      guesses.map(function(m){ return T(m.id, m.name.replace(/^Safety %: /, 'safety % for ') + ' (' + fmtV(m) + ')'); }).join(', ') + '. Tap one to see how to replace it with a real number.'
-      : 'Nothing. Every number here comes from data or your choices.'))
-  ].join('');
-
-  /* explanations: what it is / how / what it means now / what to do */
-  var pl1 = pl, fair = Math.round(pl1.fairRate * 100) / 100, give = nr > 0 ? i.rate / nr * 100 : Infinity;
-  var perM = 1e6 * (i.rate / 100 + 1 / n);
-  var EX = {
-    tied: ['All the money stuck in the business right now.',
-      'Stock in the warehouse + stock on the way + COD money FulfillKaro has not paid yet.',
-      'Now set to ' + T('tied') + '. That is about ' + T('spendMonths') + ' of our spending (' + T('spend') + ' a month).',
-      'This is an estimate. Your real stock and COD figures will replace it.'],
-    earn: ['How much profit each Rs 100 in the business makes in one month.',
-      T('base') + ' profit ÷ ' + T('tied') + ' tied up = ' + T('earn') + '.',
-      er > i.rate ? 'Good. It is far above the ' + T('rate') + ' we pay investors.' : 'Careful. It is below the ' + T('rate') + ' we pay, so investor money would cost more than it earns.',
-      'If this falls below the % we pay, stop raising money.'],
-    share: ['The biggest part of our monthly profit we allow investor payments to take.',
-      'You choose it. 50% means at most half our profit goes to investors.',
-      T('share') + ' of ' + T('base') + ' = ' + T('pot') + ' a month for all investors together.',
-      'Lower is safer. 30% to 50% leaves room for a bad month.'],
-    blend: ['How well the new money should earn, compared with our current money.',
-      'Each use has its own safety %. We mix them by how much money goes to each: ' + state.uses.map(function(u){ return esc(u.name) + ' ' + u.pct + '% × ' + u.safe + '%'; }).join(', ') + ' = ' + T('blendSafe') + '.',
-      'So new money should earn ' + T('earn') + ' × ' + T('blendSafe') + ' = ' + T('newRate') + ' a month.',
-      'Proven products deserve a high %. A new product deserves a low %. Correct them with the monthly check.'],
-    gain: ['The extra money we keep each month because of this deal.',
-      'The money earns us ' + T('extra') + '. We pay the investor ' + T('interest') + '. ' + T('extra') + ' − ' + T('interest') + ' = ' + T('gain') + '.',
-      good ? 'We come out ahead. The money earns more than it costs.' : 'We lose money. The investor costs more than the money earns.',
-      good ? 'Fine as it is. Check again when our profit changes.' : 'Lower the rate to ' + T('fairRate') + ' or less, or raise less money.'],
-    extra: ['The extra profit we expect the investor\'s money to make each month.',
-      T('capital') + ' × ' + T('newRate') + ' = ' + T('extra') + '. ' + T('newRate') + ' is our earning rate ' + T('earn') + ' × safety ' + T('blendSafe') + '.',
-      r.interest > 0 ? 'That is ' + T('times') + ' what we pay the investor.' : 'We pay the investor nothing.',
-      'This is an estimate. Check it with the monthly check after the first month.'],
-    interest: ['What we pay the investor every month until we return their money.',
-      T('rate') + ' of ' + T('capital') + ' = ' + T('interest') + '.',
-      'That is ' + T('usedPct') + ' of our monthly profit.',
-      'This amount is fixed. It does not go down in a bad month, so we must always be able to pay it.'],
-    total: ['What we gain over the whole ' + T('months') + '.',
-      T('gain') + ' a month × ' + T('months') + ' = ' + sg(r.gain * n) + '.',
-      good ? 'This is our reward for taking the deal.' : 'This is what the deal would cost us.',
-      good ? 'Compare deals by this number.' : 'Change the deal until this turns positive.'],
-    save: ['Money we set aside each month, so we can return the investor\'s money at the end.',
-      T('capital') + ' ÷ ' + T('months') + ' = ' + T('save') + ' a month.',
-      ok ? 'We keep ' + T('keep') + ' a month, so we can afford it.' : 'We keep only ' + T('keep') + ' a month. That is not enough.',
-      ok ? 'Keep this money separate, so it is ready on the day.' : 'Raise less money, or choose more months, so the monthly amount is smaller.'],
-    k2: ['Everything the investor receives from this deal.',
-      T('interest') + ' × ' + T('months') + ' = ' + T('totalInterest') + ' profit, plus their ' + T('capital') + ' back = ' + T('totalPaid') + '.',
-      'The investor earns ' + T('invReturn') + ' on their money in ' + T('months') + '.',
-      'This is the full promise. Tell the investor this number.'],
-    k3: ['The month we return the investor\'s money.',
-      'Money arrives ' + T('start') + '. First payment one month later. Payment ' + n + ' includes the full ' + T('capital') + '.',
-      'In ' + T('lastMonth') + ' we pay ' + T('lastPay') + ' at once. It is the biggest payment.',
-      'Have ' + T('lastPay') + ' ready by then. The monthly saving makes this possible.'],
-    k4: ['Our profit after the investor is paid.',
-      T('base') + ' our profit + ' + T('extra') + ' from the money − ' + T('interest') + ' to the investor = ' + T('keep') + '.',
-      'Without the deal we keep ' + T('base') + '. With it we keep ' + (good ? T('gain') + ' more.' : rs(-r.gain) + ' less.'),
-      'Part of this goes into the monthly saving (' + T('save') + ').'],
-    maxRet: ['The most money we can raise at this rate, counting only the monthly payments.',
-      'Investors may take up to ' + T('share') + ' of our profit: ' + T('pot') + ' a month. ' + T('pot') + ' ÷ ' + T('rate') + ' = ' + T('maxReturns') + '.',
-      'Raising ' + T('capital') + ' uses ' + p1(isFinite(pl1.maxReturns) && pl1.maxReturns > 0 ? i.capital / pl1.maxReturns * 100 : 0) + ' of this limit.',
-      'This limit ignores returning the money. Use the next number to decide.'],
-    maxRep: ['The most we can raise if we also save each month to return the money.',
-      'Each Rs 1M costs us ' + rs(perM) + ' a month: ' + T('rate') + ' to the investor + Rs 1M ÷ ' + n + ' saved. ' + T('pot') + ' ÷ ' + rs(perM) + ' × Rs 1M = ' + T('maxRepay') + '.',
-      i.capital <= pl1.maxRepay ? T('capital') + ' is within this limit.' : T('capital') + ' is above this limit.',
-      'This is the safer limit. Use it when you decide how much to raise.'],
-    fair: ['The highest monthly % we can pay and still keep most of what the money earns.',
-      'The money earns ' + T('newRate') + ' a month. We give at most ' + T('share') + ' of that: ' + T('newRate') + ' × ' + T('share') + ' = ' + T('fairRate') + '.',
-      i.rate <= fair ? 'We pay ' + T('rate') + ', which is within the limit.' : 'We pay ' + T('rate') + ', which is above the limit.',
-      i.rate <= fair ? 'Keep the rate at or below ' + T('fairRate') + '.' : 'Lower the rate to ' + T('fairRate') + ' or less.'],
-    c1: ['Checks that the monthly payment is a small enough part of our profit.',
-      T('interest') + ' ÷ ' + T('base') + ' = ' + T('usedPct') + '. Our limit is ' + T('share') + '.',
-      pl1.usedPct <= state.share ? 'Safe. Even in a weaker month we can pay.' : 'Too high. A weaker month could leave us short.',
-      pl1.usedPct <= state.share ? 'Nothing to do.' : 'Raise less money or lower the rate.'],
-    c2: ['Checks that the investor does not take too much of what their money earns.',
-      'We pay ' + T('rate') + '. The money earns ' + T('newRate') + '. ' + i.rate + ' ÷ ' + T('newRate').replace('%', '') + ' = ' + T('giveAway') + ' goes to the investor.',
-      give <= state.share ? 'Fair. We keep ' + p1(100 - give) + ' of what the money earns.' : 'Too much. The investor takes ' + T('giveAway') + ', above our ' + T('share') + ' limit.',
-      give <= state.share ? 'Nothing to do.' : 'Lower the rate to ' + T('fairRate') + ' or less.'],
-    c3: ['Checks that we can pay the investor and save for the return at the same time.',
-      T('interest') + ' + ' + T('save') + ' = ' + T('oblig') + ' a month. That is ' + T('obligPct') + ' of our profit with the new money.',
-      pl1.obligPct <= 100 ? 'We can afford both.' : 'We cannot afford both.',
-      pl1.obligPct <= 100 ? 'Keep saving every month.' : 'Raise less money, or choose more months.']
-  };
-  var EXN = {'tied': 'tied', 'earn': 'earn', 'share': 'share', 'blend': 'blendSafe', 'gain': 'gain', 'extra': 'extra', 'interest': 'interest', 'total': 'totalGain', 'save': 'save', 'k2': 'totalPaid', 'k3': 'lastMonth', 'k4': 'keep', 'maxRet': 'maxReturns', 'maxRep': 'maxRepay', 'fair': 'fairRate', 'c1': 'usedPct', 'c2': 'giveAway', 'c3': 'obligPct'};
-  Object.keys(EX).forEach(function(k){ var g = G[EXN[k]]; if (g){ g.what = EX[k][0]; g.means = EX[k][2]; g.todo = EX[k][3]; } });
-
-  /* chart */
-  var max = Math.max(r.lastPay, 1), step = Math.ceil(n / 12), gap = n > 24 ? '3px' : n > 12 ? '5px' : '10px';
-  var barsEl = $('bars'), xl = $('xlabels');
-  barsEl.style.gap = xl.style.gap = gap;
-  if (barsBuilt !== n){
-    barsEl.innerHTML = r.rows.map(function(){return '<div class="bcol"><div class="b-back"></div><div class="b-int"></div></div>'}).join('');
-    xl.innerHTML = r.rows.map(function(){return '<div></div>'}).join('');
-    barsBuilt = n; barsEl.offsetHeight; // force reflow so heights animate from 0
-  }
-  r.rows.forEach(function(x, k){
-    var col = barsEl.children[k], bi = col.lastChild, bb = col.firstChild;
-    bi.style.height = (x.interest / max * 100) + '%';
-    bb.style.height = (x.back / max * 100) + '%';
-    bb.style.borderWidth = x.back ? '' : '0';
-    bi.style.borderRadius = x.back ? '0' : '8px 8px 0 0';
-    col.title = mname(x.ym) + ': pay ' + rs(x.pay) + ', saved ' + rs(x.saved);
-    xl.children[k].textContent = (k % step === 0 || k === n - 1) ? MON[+x.ym.split('-')[1] - 1] : '';
-  });
-  $('linePts').setAttribute('points', ['0,100'].concat(r.rows.map(function(x, k){
-    return (((k + .5) / n) * 100).toFixed(2) + ',' + (100 - x.saved / max * 100).toFixed(2);
-  })).join(' '));
-  $('yMax').textContent = short(max); $('yHalf').textContent = short(max / 2);
-
-  $('thRate').textContent = 'Profit (' + i.rate + '%)';
-  $('sched').innerHTML = r.rows.map(function(x){
-    return '<tr' + (x.back ? ' class="last"' : '') + '><td>' + x.n + '</td><td>' + mname(x.ym) + '</td><td>' + T('interest') + '</td><td>' + (x.back ? T('capital') : '–') + '</td><td>' + (x.back ? T('lastPay') : T('interest')) + '</td><td class="sv">' + T('saved' + x.n) + '</td></tr>';
-  }).join('');
-  $('schedFoot').innerHTML = '<tr><td></td><td>Total</td><td>' + T('totalInterest') + '</td><td>' + T('capital') + '</td><td>' + T('totalPaid') + '</td><td></td></tr>';
-}
-window.addEventListener('resize', function(){ $('thumb').style.transform = 'translateX(' + (state.active * seg.children[1].offsetWidth) + 'px)'; });
-render();
 </script>
 </body>
 </html>
