@@ -186,7 +186,7 @@
         var sub = document.getElementById("mp-sub"),
           body = document.getElementById("mp-body");
         // Google Apps Script web app on the cash sheet: returns only these 2 tabs, the sheet stays private
-        var API = "SCRIPT_URL_HERE";
+        var API = "https://script.google.com/macros/s/AKfycbz_R-diFwVBmMEZ_-eDmeZ9THc5SpgdMGS778jMxBBtWOFsMvx_PlNYkd1nfrmLowc/exec";
         fetch(API)
           .then(function (r) {
             if (!r.ok) throw new Error(r.status);
