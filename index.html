@@ -7,6 +7,330 @@
 <script src="./support.js"></script>
 </head>
 <body>
+<!-- Money picture: live numbers from the cash-flow Google Sheet (tabs "Money picture" and "Investors") -->
+    <style>
+      #mp {
+        position: relative;
+        z-index: 2;
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 28px 16px 0;
+        color: #f5f7ff;
+        font:
+          15px/1.5 -apple-system,
+          BlinkMacSystemFont,
+          "SF Pro Display",
+          "Geist",
+          system-ui,
+          sans-serif;
+        font-variant-numeric: tabular-nums;
+      }
+      #mp h2 {
+        font-size: 28px;
+        line-height: 1.1;
+        margin: 0 0 4px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      #mp .sub {
+        font-size: 13px;
+        color: rgba(235, 240, 255, 0.6);
+        margin-bottom: 14px;
+      }
+      #mp .box {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 18px;
+        padding: 16px;
+        margin-bottom: 12px;
+      }
+      #mp .big {
+        font-size: 34px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      #mp .lbl {
+        font-size: 13px;
+        color: rgba(235, 240, 255, 0.65);
+      }
+      #mp .how {
+        font-size: 12px;
+        color: rgba(235, 240, 255, 0.5);
+        margin-top: 2px;
+      }
+      #mp .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 10px;
+      }
+      #mp .cell {
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 14px;
+        padding: 12px;
+      }
+      #mp .val {
+        font-size: 20px;
+        font-weight: 600;
+      }
+      #mp .good {
+        color: #7fd8a6;
+      }
+      #mp .bad {
+        color: #ff8f8f;
+      }
+      #mp h3 {
+        font-size: 15px;
+        margin: 0 0 10px;
+        font-weight: 600;
+      }
+      #mp table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      #mp th,
+      #mp td {
+        text-align: left;
+        padding: 8px 6px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        white-space: nowrap;
+      }
+      #mp th {
+        color: rgba(235, 240, 255, 0.6);
+        font-weight: 500;
+      }
+      #mp .scroll {
+        overflow-x: auto;
+      }
+      #mp a {
+        color: #b4bedb;
+      }
+    </style>
+    <section id="mp">
+      <h2>Our money today</h2>
+      <div class="sub" id="mp-sub">Reading the cash sheet…</div>
+      <div id="mp-body"></div>
+    </section>
+    <script>
+      (function () {
+        var ID = "1GXsrGFUMPcJqt-p7ts3w7elkxXjDTPtk7zSus9c3KM8";
+        var SHEET = "https://docs.google.com/spreadsheets/d/" + ID + "/edit";
+        function url(tab) {
+          return (
+            "https://docs.google.com/spreadsheets/d/" +
+            ID +
+            "/gviz/tq?tqx=out:csv&headers=1&sheet=" +
+            encodeURIComponent(tab)
+          );
+        }
+        function csv(t) {
+          var rows = [],
+            row = [],
+            f = "",
+            q = false;
+          for (var i = 0; i < t.length; i++) {
+            var c = t[i];
+            if (q) {
+              if (c == '"') {
+                if (t[i + 1] == '"') {
+                  f += '"';
+                  i++;
+                } else q = false;
+              } else f += c;
+            } else if (c == '"') q = true;
+            else if (c == ",") {
+              row.push(f);
+              f = "";
+            } else if (c == "\n") {
+              row.push(f);
+              rows.push(row);
+              row = [];
+              f = "";
+            } else if (c != "\r") f += c;
+          }
+          if (f || row.length) {
+            row.push(f);
+            rows.push(row);
+          }
+          return rows;
+        }
+        function n(s) {
+          var v = parseFloat(String(s || "").replace(/[^0-9.\-]/g, ""));
+          return isNaN(v) ? 0 : v;
+        }
+        function rs(v) {
+          var neg = v < 0;
+          v = Math.round(Math.abs(v));
+          var s = String(v),
+            last = s.slice(-3),
+            rest = s.slice(0, -3);
+          if (rest) last = "," + last;
+          rest = rest.replace(/\B(?=(\d{2})+(?!\d))/g, ",");
+          return (neg ? "-" : "") + "Rs " + rest + last;
+        }
+        function esc(s) {
+          return String(s).replace(/[&<>"]/g, function (c) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+          });
+        }
+        function get(tab) {
+          return fetch(url(tab))
+            .then(function (r) {
+              if (!r.ok) throw new Error(r.status);
+              var ct = r.headers.get("content-type") || "";
+              if (ct.indexOf("text/csv") < 0) throw new Error("private");
+              return r.text();
+            })
+            .then(csv);
+        }
+        var sub = document.getElementById("mp-sub"),
+          body = document.getElementById("mp-body");
+        Promise.all([get("Money picture"), get("Investors")])
+          .then(function (res) {
+            var P = {};
+            res[0].slice(1).forEach(function (r) {
+              // column D is a text copy: gviz drops cells whose type differs from the column's main type
+              P[r[0]] = { v: r[3] || r[1], how: r[2] };
+            });
+            function v(k) {
+              return P[k] ? n(P[k].v) : 0;
+            }
+            function cell(label, k, cls) {
+              return (
+                '<div class="cell"><div class="lbl">' +
+                esc(label) +
+                '</div><div class="val ' +
+                (cls || "") +
+                '">' +
+                rs(v(k)) +
+                '</div><div class="how">' +
+                esc(P[k] ? P[k].how : "") +
+                "</div></div>"
+              );
+            }
+            var worth = v("Full picture (Rs)"),
+              late = v("Payouts late (Rs)");
+            var safe = (P["Payouts check"] || {}).v === "Safe",
+              cashOk =
+                String((P["Cash check"] || {}).v).indexOf("Enough") === 0;
+            sub.innerHTML =
+              "From the cash sheet, " +
+              esc((P["Today"] || {}).v || "") +
+              '. <a href="' +
+              SHEET +
+              '" target="_blank" rel="noopener">Open the sheet</a> to add money in, money out, or an investor.';
+            var h = "";
+            h +=
+              '<div class="box"><div class="lbl">Full picture: what the business is worth today</div><div class="big ' +
+              (worth < 0 ? "bad" : "") +
+              '">' +
+              rs(worth) +
+              "</div>";
+            h +=
+              '<div class="how">Cash ' +
+              rs(v("Total cash (Rs)")) +
+              " + stock " +
+              rs(v("Stock at landing cost (Rs)")) +
+              " + people owe us " +
+              rs(v("People owe us (Rs)")) +
+              " − we owe investors " +
+              rs(v("We owe investors (Rs)")) +
+              "</div></div>";
+            h +=
+              '<div class="box"><h3>Investor payouts to make</h3><div class="grid">' +
+              cell("Late now", "Payouts late (Rs)", late > 0 ? "bad" : "good") +
+              cell("Next 7 days", "Payouts due in the next 7 days (Rs)") +
+              cell("Rest of this month", "Payouts due this month (Rs)") +
+              cell(
+                "Money back in next 90 days",
+                "Money back due in the next 90 days (Rs)",
+              ) +
+              "</div>";
+            h +=
+              '<div class="how" style="margin-top:10px">Cash check: <b class="' +
+              (cashOk ? "good" : "bad") +
+              '">' +
+              esc((P["Cash check"] || {}).v || "") +
+              "</b> (total cash vs late + next 7 days).</div></div>";
+            h +=
+              '<div class="box"><h3>This month</h3><div class="grid">' +
+              cell("Total cash now", "Total cash (Rs)") +
+              cell("Sales money in", "Sales money in this month (Rs)") +
+              cell("Money out", "Money out this month (Rs)") +
+              cell("New investor money", "New investor money this month (Rs)") +
+              "</div></div>";
+            h +=
+              '<div class="box"><h3>Can we pay safely?</h3><div class="grid">' +
+              cell("Monthly profit", "Monthly profit (Rs)") +
+              cell(
+                "Monthly payouts now",
+                "Monthly payouts, all investors (Rs)",
+                safe ? "good" : "bad",
+              ) +
+              cell("Safe limit", "Safe monthly payout limit (Rs)") +
+              cell(
+                "Most new money we can still raise",
+                "Most new money we can still raise at 3% (Rs)",
+              ) +
+              "</div>";
+            h +=
+              '<div class="how" style="margin-top:10px">Payouts check: <b class="' +
+              (safe ? "good" : "bad") +
+              '">' +
+              esc((P["Payouts check"] || {}).v || "") +
+              "</b></div></div>";
+            var inv = res[1].slice(1).filter(function (r) {
+              return (r[0] || "").trim();
+            });
+            h += '<div class="box"><h3>Investors (' + inv.length + ")</h3>";
+            if (!inv.length)
+              h +=
+                '<div class="how">No investors in the Investors tab yet. Add one row per investor: name, date the money came, amount.</div>';
+            else {
+              h +=
+                '<div class="scroll"><table><tr><th>Name</th><th>Amount</th><th>Monthly payout</th><th>Paid</th><th>Next payout</th><th>Money back</th><th>We still owe</th><th>Status</th></tr>';
+              inv.forEach(function (r) {
+                var st = r[14] || "";
+                h +=
+                  "<tr><td>" +
+                  esc(r[0]) +
+                  "</td><td>" +
+                  rs(n(r[2])) +
+                  "</td><td>" +
+                  rs(n(r[5])) +
+                  "</td><td>" +
+                  esc(r[7]) +
+                  " of " +
+                  esc(r[4] || "6") +
+                  "</td><td>" +
+                  esc(r[16] || r[8]) +
+                  "</td><td>" +
+                  esc(r[9]) +
+                  "</td><td>" +
+                  rs(n(r[13])) +
+                  '</td><td class="' +
+                  (st === "Payout late"
+                    ? "bad"
+                    : st === "Finished"
+                      ? ""
+                      : "good") +
+                  '">' +
+                  esc(st) +
+                  "</td></tr>";
+              });
+              h += "</table></div>";
+            }
+            h += "</div>";
+            body.innerHTML = h;
+          })
+          .catch(function () {
+            sub.innerHTML =
+              'Cannot read the cash sheet. It must be set to "anyone with the link can view". <a href="' +
+              SHEET +
+              '" target="_blank" rel="noopener">Open the sheet</a>.';
+          });
+      })();
+    </script>
 <x-dc>
 <helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
