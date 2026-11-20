@@ -185,7 +185,16 @@
         }
         var sub = document.getElementById("mp-sub"),
           body = document.getElementById("mp-body");
-        Promise.all([get("Money picture"), get("Investors")])
+        // Google Apps Script web app on the cash sheet: returns only these 2 tabs, the sheet stays private
+        var API = "SCRIPT_URL_HERE";
+        fetch(API)
+          .then(function (r) {
+            if (!r.ok) throw new Error(r.status);
+            return r.json();
+          })
+          .then(function (d) {
+            return [d.pic, d.inv];
+          })
           .then(function (res) {
             var P = {};
             res[0].slice(1).forEach(function (r) {
@@ -325,7 +334,7 @@
           })
           .catch(function () {
             sub.innerHTML =
-              'Cannot read the cash sheet. It must be set to "anyone with the link can view". <a href="' +
+              'Cannot read the cash sheet right now. Check the internet, or that the sheet script is still deployed. <a href="' +
               SHEET +
               '" target="_blank" rel="noopener">Open the sheet</a>.';
           });
